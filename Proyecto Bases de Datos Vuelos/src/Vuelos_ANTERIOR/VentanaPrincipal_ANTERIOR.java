@@ -1,4 +1,4 @@
-package Vuelos;
+package Vuelos_ANTERIOR;
 
 
 import java.sql.DriverManager;
@@ -12,7 +12,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 
-public class VentanaPrincipal extends JFrame {
+public class VentanaPrincipal_ANTERIOR extends JFrame {
 	
 	/**
 	 * 
@@ -22,8 +22,8 @@ public class VentanaPrincipal extends JFrame {
 	private JButton btnAdmin;
 	private java.sql.Connection conexion;
 	private JLabel lblSistemaDeParquimetros;
-	private VentanaEmpleado ventanaEmpleado;
-	private VentanaAdministrador ventanaAdmin;
+	private VentanaEmpleado_ANTERIOR ventanaEmpleado;
+	private VentanaAdministrador_ANTERIOR ventanaAdmin;
 	private JButton btnInspector;
 	private JLabel lblParquimetros;
 	
@@ -35,7 +35,7 @@ public class VentanaPrincipal extends JFrame {
  */
 	
 	
-	public VentanaPrincipal() {
+	public VentanaPrincipal_ANTERIOR() {
 		
 		conectarBD();
 	}
@@ -65,7 +65,8 @@ public class VentanaPrincipal extends JFrame {
            e.printStackTrace();
         }
 	}
-/*
+
+	/*
 	private void consultaAdmin (String pass) {
 		 try
          {
@@ -139,6 +140,7 @@ public class VentanaPrincipal extends JFrame {
 		
 	}
 	*/
+	
 	private void cerrarVistaActual() {
 		cerrarBD();
 		this.setVisible(false);
