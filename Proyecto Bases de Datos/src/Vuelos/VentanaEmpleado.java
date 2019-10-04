@@ -13,13 +13,10 @@ import quick.dbtable.DBTable;
 
 public class VentanaEmpleado extends JFrame{
 	
-	
-	
-	
+		
 	   
 	   private DBTable tabla;    
 	   
-
 	   
 	   
 	   public VentanaEmpleado() {
@@ -32,8 +29,7 @@ public class VentanaEmpleado extends JFrame{
 	private void iniciarGUI() {
 		
 	}
-	
-	
+		
 	
 	private void conectarBD()
 	   {
