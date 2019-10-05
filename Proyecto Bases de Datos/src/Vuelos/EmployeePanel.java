@@ -1,24 +1,27 @@
 package Vuelos;
 
 import java.awt.BorderLayout;
-
-import javax.swing.JPanel;
 import quick.dbtable.DBTable;
 
-public class EmployeePanel extends JPanel {
+@SuppressWarnings("serial")
+public class EmployeePanel extends MainPanel {
 	private DBTable table;
 
 	/**
 	 * Create the panel.
 	 */
-	public EmployeePanel() {
+	public EmployeePanel(DBTable table) {
+		this.table = table;
 		initGUI();
 	}
 	
 	private void initGUI() {
 		
-		table = new DBTable();
 		this.add(table, BorderLayout.CENTER);
+	}
+
+	public DBTable getDBTable() {
+		return table;
 	}
 
 }

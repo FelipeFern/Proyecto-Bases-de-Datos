@@ -5,11 +5,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import quick.dbtable.DBTable;
 
 @SuppressWarnings("serial")
 public class MainWindow extends JFrame {
 
-	private JPanel contentPane;
+	private MainPanel contentPane;
 	private JTextField tFieldUser;
 	private JLabel lblUser, lblPassword;
 	private JPasswordField passwordField;
@@ -45,13 +46,15 @@ public class MainWindow extends JFrame {
 	 * Create the frame.
 	 */
 	private MainWindow() {
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		connection = DataBaseConnection.getInstance();
 		initGUI();		
 		initContentPane();
 	}
 
 	private void initGUI() {
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 450, 300);
+		setBounds(100, 100, 1024, 600);
+		setResizable(false);
 
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
@@ -77,8 +80,15 @@ public class MainWindow extends JFrame {
 		mntmLogout = new JMenuItem("Desconectarse");
 		mntmLogout.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				connection.disconnectDataBase(getContentPane().getComponent(0));
+				DBTable table = contentPane.getDBTable();
+				if (table != null) {
+					connection.disconnectDataBase(table);
+					System.out.println("Es nulo lpm!");
+				}
 				initContentPane();
+				contentPane.setVisible(true);
+				mntmLogout.setEnabled(false);
+				getFrame().repaint();
 			}
 		});
 		mnArchivo.add(mntmLogout);
@@ -87,7 +97,7 @@ public class MainWindow extends JFrame {
 	}
 	
 	private void initContentPane() {
-		contentPane = new JPanel();
+		contentPane = new MainPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
@@ -99,6 +109,17 @@ public class MainWindow extends JFrame {
 		btnLogin.setVisible(false);
 		btnLogin.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				DBTable table = new DBTable();
+				String username = tFieldUser.getText();
+				String password = new String(passwordField.getPassword());
+				connection.connectToDatabase(table, username, password);
+				if (username.equals("admin")) {
+					contentPane = new AdminPanel(table);
+				} else {
+					contentPane = new EmployeePanel(table);
+				}
+				setContentPane(contentPane);
+				setVisible(true);
 				mntmLogout.setEnabled(true);
 			}
 		});
@@ -111,7 +132,7 @@ public class MainWindow extends JFrame {
 		lblUser.setEnabled(false);
 		contentPane.add(lblUser);
 
-		lblPassword = new JLabel("Contraseña");
+		lblPassword = new JLabel("ContraseÃ±a");
 		lblPassword.setHorizontalAlignment(SwingConstants.CENTER);
 		lblPassword.setBounds(12, 141, 85, 25);
 		lblPassword.setBorder(BorderFactory.createLineBorder(Color.black));
@@ -150,13 +171,13 @@ public class MainWindow extends JFrame {
 		
 	}
 
-	private Frame getFrame() {
+	private JFrame getFrame() {
 		return this;
 	}
 
 	private void exitAction() {
 		Object[] options = { "De una", "No wachin que pierdo todo" };
-		int n = JOptionPane.showOptionDialog(getFrame(), "¿Realmente desea salir de la aplicación?", "Cerrar",
+		int n = JOptionPane.showOptionDialog(getFrame(), "ï¿½Realmente desea salir de la aplicaciï¿½n?", "Cerrar",
 				JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
 		if (n == 0) {
 			Frame f = getFrame();
@@ -192,9 +213,5 @@ public class MainWindow extends JFrame {
 		btnCancel.setVisible(true);
 		btnLogin.setEnabled(true);
 		btnLogin.setVisible(true);
-	}
-
-	public void setCPanel(JPanel c) {
-		this.setCPanel(c);
 	}
 }
