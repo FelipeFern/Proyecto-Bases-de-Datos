@@ -1,9 +1,16 @@
 package Vuelos;
 
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Types;
+
+import javax.swing.DefaultListModel;
+import javax.swing.JList;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+
 import quick.dbtable.DBTable;
 
 public class DataBaseConnection {
@@ -106,6 +113,26 @@ public class DataBaseConnection {
 			System.out.println("VendorError: " + ex.getErrorCode());
 			JOptionPane.showMessageDialog(MainWindow.getInstance(), ex.getMessage() + "\n",
 					"Error al ejecutar la consulta.", JOptionPane.ERROR_MESSAGE);
+		}
+	}
+	
+	public void refrescarExecute(String message, JList<String> list, MainPanel panel) {
+		try {
+			DefaultListModel<String> model = new DefaultListModel<String>();
+			Statement s = (Statement) connection.createStatement();
+			s.executeQuery(message); 
+			ResultSet rs = s.getResultSet();
+			while (rs.next()) {
+				model.addElement(rs.getString(1));
+			}
+			list.setModel(model);
+
+		} catch (SQLException ex) {
+			System.out.println("SQLExcepcion: " + ex.getMessage());
+			System.out.println("SQLEstado: " + ex.getSQLState());
+			System.out.println("CodigoError: " + ex.getErrorCode());
+			JOptionPane.showMessageDialog(SwingUtilities.getWindowAncestor(panel), ex.getMessage() + "\n",
+					"Error en el acceso.", JOptionPane.ERROR_MESSAGE);
 		}
 	}
 }
