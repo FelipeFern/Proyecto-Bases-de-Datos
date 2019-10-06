@@ -3,40 +3,23 @@ package Vuelos;
 import quick.dbtable.DBTable;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Types;
-
-import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JTextArea;
-import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.JScrollPane;
 
 @SuppressWarnings("serial")
 public class AdminPanel extends MainPanel {
 	private DBTable table;
 	private DataBaseConnection dataConnection;
-	
-	
 	private JLabel lblDescription;
 	private JButton btnConsult;
 	private JTextArea textCommand;
 	private JList<String> listTables;
-	private JList<String> listAttributes;   
-
-	/*
-	 * Falta acomodar la tabla donde muestra las distintas tablas en la gui
-	 */
-	
+	private JList<String> listAttributes;
 
 	/**
 	 * Create the panel.
@@ -49,10 +32,10 @@ public class AdminPanel extends MainPanel {
 	}
 
 	private void initGUI() {
-		setBounds(100,100,1024,600);
+		setBounds(100, 100, 1024, 600);
 		setLayout(null);
-		
-		table.setBounds(12, 160, 1000, 384);
+
+		table.setBounds(312, 160, 682, 384);
 		this.add(table);
 		table.setVisible(true);
 
@@ -64,50 +47,78 @@ public class AdminPanel extends MainPanel {
 		btnConsult = new JButton("Consultar");
 		btnConsult.setBounds(882, 48, 130, 25);
 		add(btnConsult);
-		
+
+		JScrollPane scrollPane = new JScrollPane();
+		scrollPane.setBounds(10, 48, 858, 100);
+		scrollPane.setLayout(null);
+		scrollPane.setVisible(true);
+		add(scrollPane);
+
 		textCommand = new JTextArea();
-		textCommand.setBounds(12, 48, 858, 100);
-		add(textCommand);
+		//textCommand.setBounds(10, 48, 858, 100);
+		textCommand.setBounds(scrollPane.getBounds());
+		// add(textCommand);
+		textCommand.setVisible(true);
+		scrollPane.setRowHeaderView(textCommand);
+
 		btnConsult.setVisible(true);
-		
+
 		listTables = new JList<String>();
-		
+		listAttributes = new JList<String>();
+		add(listTables);
+		add(listAttributes);
+		listTables.setVisible(true);
+		listAttributes.setVisible(true);
+		listTables.setBounds(12, 197, 150, 347);
+		listAttributes.setBounds(174, 197, 120, 347);
+
+		JLabel lblTables = new JLabel("Tablas");
+		lblTables.setBounds(10, 160, 150, 25);
+		add(lblTables);
+
+		JLabel lblAttributes = new JLabel("Atributos");
+		lblAttributes.setBounds(174, 160, 120, 25);
+		add(lblAttributes);
+
 		btnConsult.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				refrescarTabla();
-			}                 
+			}
 		});
-		
+
 		listTables.addListSelectionListener(new ListSelectionListener() {
 			public void valueChanged(ListSelectionEvent arg0) {
 				String nombreTabla = listTables.getSelectedValue().toString();
 				llenarListaAtributos(nombreTabla);
 			}
 		});
-				
+
+		listAttributes.addListSelectionListener(new ListSelectionListener() {
+			public void valueChanged(ListSelectionEvent arg0) {
+				String message = "select " + listAttributes.getSelectedValue() + " from "
+						+ listTables.getSelectedValue() + ";";
+				dataConnection.refreshTable(table, message);
+			}
+		});
+
 	}
-	
+
 	private void llenarListaTablas() {
 		String message = "show tables;";
-		dataConnection.refrescarExecute(message, listTables, this);		
+		dataConnection.refreshExcecute(message, listTables, this);
 	}
-	
-	
+
 	private void llenarListaAtributos(String tabla) {
 		String message = "Describe " + tabla + ";";
-		dataConnection.refrescarExecute(message, listAttributes, this);		
+		dataConnection.refreshExcecute(message, listAttributes, this);
 	}
-	
-	
+
 	public DBTable getDBTable() {
 		return table;
 	}
-	
-	
-	private void refrescarTabla(){	   
+
+	private void refrescarTabla() {
 		String consult = this.textCommand.getText().trim();
-		dataConnection.refrescarTabla(table, consult);	    	 	    
+		dataConnection.refreshTable(table, consult);
 	}
-	
-	
 }

@@ -48,7 +48,7 @@ public class MainWindow extends JFrame {
 	private MainWindow() {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		connection = DataBaseConnection.getInstance();
-		initGUI();		
+		initGUI();
 		initContentPane();
 	}
 
@@ -76,14 +76,13 @@ public class MainWindow extends JFrame {
 				exitAction();
 			}
 		});
-		
+
 		mntmLogout = new JMenuItem("Desconectarse");
 		mntmLogout.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				DBTable table = contentPane.getDBTable();
 				if (table != null) {
 					connection.disconnectDataBase(table);
-					System.out.println("Es nulo lpm!");
 				}
 				initContentPane();
 				contentPane.setVisible(true);
@@ -95,13 +94,13 @@ public class MainWindow extends JFrame {
 		mnArchivo.add(mntmExit);
 		mntmLogout.setEnabled(false);
 	}
-	
+
 	private void initContentPane() {
 		contentPane = new MainPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
-		
+
 		btnLogin = new JButton("Ingresar");
 		btnLogin.setBounds(12, 12, 114, 25);
 		contentPane.add(btnLogin);
@@ -112,15 +111,16 @@ public class MainWindow extends JFrame {
 				DBTable table = new DBTable();
 				String username = tFieldUser.getText();
 				String password = new String(passwordField.getPassword());
-				connection.connectToDatabase(table, username, password);
-				if (username.equals("admin")) {
-					contentPane = new AdminPanel(table);
-				} else {
-					contentPane = new EmployeePanel(table);
+				if (connection.connectToDatabase(table, username, password)) {
+					if (username.equals("admin")) {
+						contentPane = new AdminPanel(table);
+					} else {
+						contentPane = new EmployeePanel(table);
+					}
+					setContentPane(contentPane);
+					setVisible(true);
+					mntmLogout.setEnabled(true);
 				}
-				setContentPane(contentPane);
-				setVisible(true);
-				mntmLogout.setEnabled(true);
 			}
 		});
 
@@ -168,7 +168,7 @@ public class MainWindow extends JFrame {
 		btnCancel.setEnabled(false);
 		btnCancel.setVisible(false);
 		contentPane.add(btnCancel);
-		
+
 	}
 
 	private JFrame getFrame() {
@@ -176,8 +176,8 @@ public class MainWindow extends JFrame {
 	}
 
 	private void exitAction() {
-		Object[] options = { "De una", "No wachin que pierdo todo" };
-		int n = JOptionPane.showOptionDialog(getFrame(), "�Realmente desea salir de la aplicaci�n?", "Cerrar",
+		Object[] options = { "Si", "No" };
+		int n = JOptionPane.showOptionDialog(getFrame(), "¿Realmente desea salir de la aplicación?", "Cerrar",
 				JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
 		if (n == 0) {
 			Frame f = getFrame();

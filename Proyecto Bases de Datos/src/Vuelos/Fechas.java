@@ -1,4 +1,4 @@
-package batallas;
+package Vuelos;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
