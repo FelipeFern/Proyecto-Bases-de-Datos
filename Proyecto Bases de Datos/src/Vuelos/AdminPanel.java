@@ -50,7 +50,6 @@ public class AdminPanel extends MainPanel {
 
 		JScrollPane scrollPane = new JScrollPane();
 		scrollPane.setBounds(10, 48, 858, 100);
-		scrollPane.setLayout(null);
 		scrollPane.setVisible(true);
 		add(scrollPane);
 
@@ -59,7 +58,7 @@ public class AdminPanel extends MainPanel {
 		textCommand.setBounds(scrollPane.getBounds());
 		// add(textCommand);
 		textCommand.setVisible(true);
-		scrollPane.setRowHeaderView(textCommand);
+		scrollPane.setViewportView(textCommand);
 
 		btnConsult.setVisible(true);
 
