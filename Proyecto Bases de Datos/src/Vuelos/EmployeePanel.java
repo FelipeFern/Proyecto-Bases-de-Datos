@@ -24,6 +24,8 @@ public class EmployeePanel extends MainPanel {
 	private JList<String> cityToList, cityFromList;
 	private DataBaseConnection dbConnection;
 	private JFormattedTextField ftfDateSince, ftfDateTo;
+	private String cityTo, cityFrom;
+	private boolean to_from=false;
 
 	/**
 	 * Create the panel.
@@ -59,7 +61,7 @@ public class EmployeePanel extends MainPanel {
 		JRadioButton rdbtnRoundTrip = new JRadioButton("Ida y Vuelta");
 		rdbtnRoundTrip.setBounds(282, 73, 110, 25);
 		add(rdbtnRoundTrip);
-
+	
 		ButtonGroup bGroup = new ButtonGroup();
 		bGroup.add(rdbtnGoFlights);
 		bGroup.add(rdbtnRoundTrip);
@@ -84,7 +86,12 @@ public class EmployeePanel extends MainPanel {
 		add(btnShowFlights);
 		btnShowFlights.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-
+				if(to_from) {
+					refrescarTablaIdaYVuelta();					
+				}
+				else {
+					refrescarTablaIda();
+				}
 			}
 		});
 
@@ -110,14 +117,36 @@ public class EmployeePanel extends MainPanel {
 
 		cityToList.addListSelectionListener(new ListSelectionListener() {
 			public void valueChanged(ListSelectionEvent arg0) {
-
+				if (!arg0.getValueIsAdjusting()){		           
+		            cityTo = cityToList.getSelectedValue().toString();
+		        }
 			}
 		});
+		
 		cityFromList.addListSelectionListener(new ListSelectionListener() {
 			public void valueChanged(ListSelectionEvent arg0) {
+				if (!arg0.getValueIsAdjusting()){		           
+		            cityFrom = cityFromList.getSelectedValue().toString();
+		        }
 
 			}
-		});
+		});		
+		
+		rdbtnGoFlights.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+	            to_from = false;
+
+	        }
+	    });		
+		
+		rdbtnRoundTrip.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+	            to_from = true;
+
+	        }
+	    });
+		
+		//Agregar listener a los botones que cuando se active el de ida y vuelta, se ponga true la variable to_from;
 	}
 
 	private void initJFormattedTextFields() {
@@ -151,5 +180,32 @@ public class EmployeePanel extends MainPanel {
 	public void fillCityToList() {
 		String message = "SELECT ALlegada_ciudad FROM vuelos_disponibles GROUP BY ALlegada_ciudad";
 		dbConnection.refreshExcecute(message, cityToList, this);
+	}
+	
+	private void refrescarTablaIda(){	   
+		String fechaSalida = this.ftfDateSince.getText().trim();		
+		String consult = "SELECT vp.Numero, vp.ASalida_nombre, vp.HoraSalida, vp.ALlegada_nombre, vp.HoraLlegada, vp.Modelo, vp.duracion \n" +
+                         "FROM vuelos_disponibles as vp \n" +
+                         "WHERE vp.ASalida_ciudad = " + cityTo + " \n" +
+                         "AND vp.ALlegada.ciudad = " + cityFrom + " \n" +
+                         "AND vp.Fecha = " + fechaSalida + " \n" +
+                         "ORDER BY vp.Fecha, vp.ASalida_ciudad, vp.ALlegada_ciudad ";
+		dbConnection.refreshTable(table, consult);	    	 	    
+	}
+	
+
+	private void refrescarTablaIdaYVuelta(){	   
+		String fechaSalida = this.ftfDateSince.getText().trim();
+		String fechaVuelta = this.ftfDateTo.getText().trim();
+		String consult = "SELECT vp.Numero, vp.ASalida_nombre, vp.HoraSalida, vp.ALlegada_nombre, vp.HoraLlegada, vp.Modelo, vp.duracion \n" +
+                         "FROM vuelos_disponibles as vp \n" +
+                         "WHERE (vp.ASalida_ciudad = " + cityTo + " \n" +
+                         "AND vp.ALlegada.ciudad = " + cityFrom + " \n" +
+                         "AND vp.Fecha = " + fechaSalida + ") \n" +
+                         "OR (vp.ASalida_ciudad = " + cityTo + " \n" +
+                         "AND vp.ALlegada.ciudad = " + cityFrom + " \n" +
+                         "AND vp.Fecha = " + fechaVuelta + ") \n" +
+                         "ORDER BY vp.Fecha, vp.ASalida_ciudad, vp.ALlegada_ciudad ";
+		dbConnection.refreshTable(table, consult);	    	 	    
 	}
 }
