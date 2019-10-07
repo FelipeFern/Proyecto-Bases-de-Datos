@@ -36,7 +36,7 @@ public class DataBaseConnection {
 				table.connectDatabase(driver, url, username, password);
 				connection = DriverManager.getConnection(url, username, password);
 			} else {
-				if (!connectAsEmpleado(table, driver, url, username, password)) {
+				if (!connectAsEmployee(table, driver, url, username, password)) {
 					return false;
 				}
 			}
@@ -54,11 +54,11 @@ public class DataBaseConnection {
 		return false;
 	}
 
-	private boolean connectAsEmpleado(DBTable table, String driver, String url, String username, String password) {
+	private boolean connectAsEmployee(DBTable table, String driver, String url, String username, String password) {
 		try {
 			table.connectDatabase(driver, url, "empleado", "empleado");
 			connection = DriverManager.getConnection(url, "empleado", "empleado");
-			String query = "SELECT legajo, password FROM empleados WHERE md5(" + password + ") = password AND "
+			String query = "SELECT legajo, password FROM empleados WHERE '" + password + "' = password AND "
 					+ username + " = legajo;";
 			Statement s = (Statement) connection.createStatement();
 			s.executeQuery(query);

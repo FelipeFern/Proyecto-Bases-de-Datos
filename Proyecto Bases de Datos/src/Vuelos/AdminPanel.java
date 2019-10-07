@@ -54,14 +54,12 @@ public class AdminPanel extends MainPanel {
 		add(scrollPane);
 
 		textCommand = new JTextArea();
-		//textCommand.setBounds(10, 48, 858, 100);
 		textCommand.setBounds(scrollPane.getBounds());
-		// add(textCommand);
 		textCommand.setVisible(true);
 		scrollPane.setViewportView(textCommand);
-
+		
 		btnConsult.setVisible(true);
-
+		
 		listTables = new JList<String>();
 		listAttributes = new JList<String>();
 		add(listTables);
@@ -117,7 +115,7 @@ public class AdminPanel extends MainPanel {
 	}
 
 	private void refrescarTabla() {
-		String consult = this.textCommand.getText().trim();
-		dataConnection.refreshTable(table, consult);
+		String query = this.textCommand.getText().trim();
+		dataConnection.refreshTable(table, query);
 	}
 }

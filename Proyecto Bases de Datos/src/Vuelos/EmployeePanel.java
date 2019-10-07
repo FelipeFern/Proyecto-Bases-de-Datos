@@ -6,18 +6,24 @@ import java.awt.event.ActionListener;
 import quick.dbtable.DBTable;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.text.MaskFormatter;
 import javax.swing.JList;
 import javax.swing.JRadioButton;
-import javax.swing.JTextField;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JSeparator;
+import javax.swing.JTextField;
+import javax.swing.JScrollPane;
+import javax.swing.JFormattedTextField;
 
 @SuppressWarnings("serial")
 public class EmployeePanel extends MainPanel {
 	private DBTable table;
-	private JTextField tFieldDateSince;
-	private JTextField tFieldDateTo;
+	private JList<String> cityToList, cityFromList;
+	private DataBaseConnection dbConnection;
+	private JFormattedTextField ftfDateSince, ftfDateTo;
 
 	/**
 	 * Create the panel.
@@ -26,8 +32,10 @@ public class EmployeePanel extends MainPanel {
 		this.table = table;
 		setBounds(100, 100, 1024, 600);
 		setLayout(null);
-
+		dbConnection = DataBaseConnection.getInstance();
 		initGUI();
+		fillCityToList();
+		fillCityFromList();
 	}
 
 	private void initGUI() {
@@ -39,18 +47,10 @@ public class EmployeePanel extends MainPanel {
 		lblCityFrom.setHorizontalAlignment(SwingConstants.CENTER);
 		add(lblCityFrom);
 
-		JList<String> cityFromList = new JList<String>();
-		cityFromList.setBounds(12, 49, 125, 80);
-		add(cityFromList);
-
 		JLabel lblCityTo = new JLabel("Ciudad destino");
 		lblCityTo.setHorizontalAlignment(SwingConstants.CENTER);
 		lblCityTo.setBounds(149, 12, 125, 25);
 		add(lblCityTo);
-
-		JList<String> cityToList = new JList<String>();
-		cityToList.setBounds(149, 49, 125, 80);
-		add(cityToList);
 
 		JRadioButton rdbtnGoFlights = new JRadioButton("Ida");
 		rdbtnGoFlights.setBounds(282, 45, 110, 25);
@@ -64,25 +64,18 @@ public class EmployeePanel extends MainPanel {
 		bGroup.add(rdbtnGoFlights);
 		bGroup.add(rdbtnRoundTrip);
 
-		tFieldDateSince = new JTextField();
-		tFieldDateSince.setBounds(400, 45, 124, 25);
-		add(tFieldDateSince);
-		tFieldDateSince.setColumns(10);
-
-		tFieldDateTo = new JTextField();
-		tFieldDateTo.setBounds(536, 45, 124, 25);
-		add(tFieldDateTo);
-		tFieldDateTo.setColumns(10);
-
 		JLabel lblOption = new JLabel("Opciones vuelo");
+		lblOption.setHorizontalAlignment(SwingConstants.CENTER);
 		lblOption.setBounds(284, 12, 108, 25);
 		add(lblOption);
 
 		JLabel lblDateSince = new JLabel("Fecha desde");
+		lblDateSince.setHorizontalAlignment(SwingConstants.CENTER);
 		lblDateSince.setBounds(400, 12, 125, 25);
 		add(lblDateSince);
 
 		JLabel lblDateTo = new JLabel("Fecha hasta");
+		lblDateTo.setHorizontalAlignment(SwingConstants.CENTER);
 		lblDateTo.setBounds(537, 12, 125, 25);
 		add(lblDateTo);
 
@@ -91,7 +84,7 @@ public class EmployeePanel extends MainPanel {
 		add(btnShowFlights);
 		btnShowFlights.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				
+
 			}
 		});
 
@@ -99,9 +92,64 @@ public class EmployeePanel extends MainPanel {
 		separator.setBounds(12, 141, 1000, 2);
 		add(separator);
 
+		JScrollPane scrollPaneCityFrom = new JScrollPane();
+		scrollPaneCityFrom.setBounds(12, 49, 125, 80);
+		add(scrollPaneCityFrom);
+
+		cityFromList = new JList<String>();
+		scrollPaneCityFrom.setViewportView(cityFromList);
+
+		JScrollPane scrollPaneCityTo = new JScrollPane();
+		scrollPaneCityTo.setBounds(149, 49, 125, 80);
+		add(scrollPaneCityTo);
+
+		cityToList = new JList<String>();
+		scrollPaneCityTo.setViewportView(cityToList);
+
+		initJFormattedTextFields();
+
+		cityToList.addListSelectionListener(new ListSelectionListener() {
+			public void valueChanged(ListSelectionEvent arg0) {
+
+			}
+		});
+		cityFromList.addListSelectionListener(new ListSelectionListener() {
+			public void valueChanged(ListSelectionEvent arg0) {
+
+			}
+		});
+	}
+
+	private void initJFormattedTextFields() {
+		MaskFormatter dateMask = null;
+		try {
+			dateMask = new MaskFormatter("##/##/####");
+			dateMask.setPlaceholderCharacter('-');
+			dateMask.setValidCharacters("0123456789");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		ftfDateSince = new JFormattedTextField(dateMask);
+		ftfDateSince.setHorizontalAlignment(JTextField.RIGHT);
+		ftfDateTo = new JFormattedTextField(dateMask);
+		ftfDateTo.setHorizontalAlignment(JTextField.RIGHT);
+		ftfDateSince.setBounds(400, 45, 124, 25);
+		ftfDateTo.setBounds(537, 45, 124, 25);
+		add(ftfDateTo);
+		add(ftfDateSince);
 	}
 
 	public DBTable getDBTable() {
 		return table;
+	}
+
+	public void fillCityFromList() {
+		String message = "SELECT ASalida_ciudad FROM vuelos_disponibles GROUP BY ASalida_ciudad;";
+		dbConnection.refreshExcecute(message, cityFromList, this);
+	}
+
+	public void fillCityToList() {
+		String message = "SELECT ALlegada_ciudad FROM vuelos_disponibles GROUP BY ALlegada_ciudad";
+		dbConnection.refreshExcecute(message, cityToList, this);
 	}
 }
