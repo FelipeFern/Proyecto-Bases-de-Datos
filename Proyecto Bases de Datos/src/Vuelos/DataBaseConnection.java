@@ -5,9 +5,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
-import java.util.Date;
-
-import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListModel;
 import javax.swing.JComboBox;
@@ -143,14 +140,20 @@ public class DataBaseConnection {
 		}
 	}
 
-	public void refreshExcecute(String message, JComboBox<Date> comboBox, EmployeePanel panel) {
+	public void refreshExcecute(String message, JComboBox<String> comboBox, EmployeePanel panel) {
 		try {
-			DefaultComboBoxModel<Date> model = new DefaultComboBoxModel<Date>();
+			DefaultComboBoxModel<String> model = new DefaultComboBoxModel<String>();
 			Statement s = (Statement) connection.createStatement();
 			s.executeQuery(message);
 			ResultSet rs = s.getResultSet();
 			while (rs.next()) {
-				model.addElement(rs.getDate(1));
+				String str;
+				if (message.contains("Fecha")) {
+					str = Fechas.convertirDateAString(rs.getDate(1));
+				} else {
+					str = rs.getString(1);
+				}
+				model.addElement(str);				
 			}
 			comboBox.setModel(model);
 		} catch (SQLException ex) {
@@ -160,6 +163,5 @@ public class DataBaseConnection {
 			JOptionPane.showMessageDialog(SwingUtilities.getWindowAncestor(panel), ex.getMessage() + "\n",
 					"Error en el acceso.", JOptionPane.ERROR_MESSAGE);
 		}
-		
 	}
 }
