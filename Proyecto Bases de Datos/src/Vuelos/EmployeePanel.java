@@ -3,6 +3,8 @@ package Vuelos;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.sql.Date;
 
 import quick.dbtable.DBTable;
@@ -10,22 +12,26 @@ import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 import javax.swing.text.MaskFormatter;
 import javax.swing.JRadioButton;
+import javax.swing.AbstractButton;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JSeparator;
 import javax.swing.JComboBox;
+import javax.swing.JTable;
 
 @SuppressWarnings("serial")
 public class EmployeePanel extends MainPanel {
-	private DBTable table;
+	private DBTable table, tableDescription;
 	private DataBaseConnection dbConnection;
 	private JComboBox<String> cbCityFrom, cbCityTo,cbDateFrom, cbDateUp;
 
 	/**
 	 * Create the panel.
+	 * @param table2 
 	 */
-	public EmployeePanel(DBTable table) {
+	public EmployeePanel(DBTable table, DBTable table2) {
 		this.table = table;
+		this.tableDescription = table2;
 		setBounds(100, 100, 1024, 600);
 		setLayout(null);
 		dbConnection = DataBaseConnection.getInstance();
@@ -38,9 +44,12 @@ public class EmployeePanel extends MainPanel {
 
 	private void initGUI() {
 		add(table, BorderLayout.CENTER);
-		table.setBounds(12, 118, 512, 415);
+		table.setBounds(12, 119, 512, 415);
 		table.setEditable(false);
+		table.addMouseListener(createMouseListener());
 		
+		tableDescription.setBounds(528, 119, 484, 415);
+		add(tableDescription);		
 
 		JLabel lblCityFrom = new JLabel("Ciudad origen");
 		lblCityFrom.setBounds(12, 12, 125, 25);
@@ -97,6 +106,24 @@ public class EmployeePanel extends MainPanel {
 		add(separator);
 
 		initJFormattedTextFields();
+	}
+	
+	private MouseListener createMouseListener() {
+		return new MouseListener() {
+			public void mouseReleased(MouseEvent e) {}
+			public void mousePressed(MouseEvent e) {}
+			public void mouseExited(MouseEvent e) {}
+			public void mouseEntered(MouseEvent e) {}
+			
+			public void mouseClicked(MouseEvent e) {
+				int row = table.getSelectedRow();
+				String nroVuelo = table.getValueAt(row, 0).toString();
+				String query = "SELECT Numero AS 'Numero Vuelo', NombreClase AS Clase, \n"
+						+ "asientos_disponibles AS 'Asientos disponibles', Precio \n" 
+						+ "FROM vuelos_disponibles WHERE Numero = '" + nroVuelo + "' ORDER BY Numero, Fecha;";
+				dbConnection.refreshTable(tableDescription, query);
+			}
+		};
 	}
 
 	private void initJFormattedTextFields() {

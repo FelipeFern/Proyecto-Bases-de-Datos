@@ -115,7 +115,9 @@ public class MainWindow extends JFrame {
 					if (username.equals("admin")) {
 						contentPane = new AdminPanel(table);
 					} else {
-						contentPane = new EmployeePanel(table);
+						DBTable table2 = new DBTable();
+						connection.connectToDatabase(table2, username, password);
+						contentPane = new EmployeePanel(table, table2);
 					}
 					setContentPane(contentPane);
 					setVisible(true);
@@ -168,7 +170,6 @@ public class MainWindow extends JFrame {
 		btnCancel.setEnabled(false);
 		btnCancel.setVisible(false);
 		contentPane.add(btnCancel);
-
 	}
 
 	private JFrame getFrame() {
