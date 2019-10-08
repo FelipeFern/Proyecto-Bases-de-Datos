@@ -33,7 +33,7 @@ public class DataBaseConnection {
 			String driver = "com.mysql.jdbc.Driver";
 			String servidor = "localhost:3306";
 			String baseDatos = "vuelos";
-			String url = "jdbc:mysql://" + servidor + "/" + baseDatos;
+			String url = "jdbc:mysql://" + servidor + "/" + baseDatos +"?serverTimezone=America/Argentina/Buenos_Aires";
 			if (username.equals("admin")) {
 				table.connectDatabase(driver, url, username, password);
 				connection = DriverManager.getConnection(url, username, password);
