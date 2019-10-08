@@ -5,7 +5,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
+import java.util.Date;
+
+import javax.swing.ComboBoxModel;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListModel;
+import javax.swing.JComboBox;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -136,5 +141,25 @@ public class DataBaseConnection {
 			JOptionPane.showMessageDialog(SwingUtilities.getWindowAncestor(panel), ex.getMessage() + "\n",
 					"Error en el acceso.", JOptionPane.ERROR_MESSAGE);
 		}
+	}
+
+	public void refreshExcecute(String message, JComboBox<Date> comboBox, EmployeePanel panel) {
+		try {
+			DefaultComboBoxModel<Date> model = new DefaultComboBoxModel<Date>();
+			Statement s = (Statement) connection.createStatement();
+			s.executeQuery(message);
+			ResultSet rs = s.getResultSet();
+			while (rs.next()) {
+				model.addElement(rs.getDate(1));
+			}
+			comboBox.setModel(model);
+		} catch (SQLException ex) {
+			System.out.println("SQLExcepcion: " + ex.getMessage());
+			System.out.println("SQLEstado: " + ex.getSQLState());
+			System.out.println("CodigoError: " + ex.getErrorCode());
+			JOptionPane.showMessageDialog(SwingUtilities.getWindowAncestor(panel), ex.getMessage() + "\n",
+					"Error en el acceso.", JOptionPane.ERROR_MESSAGE);
+		}
+		
 	}
 }
