@@ -3,7 +3,7 @@ package Vuelos;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
-public class Fechas {	
+public class Fechas {
 	
 	public static java.util.Date convertirStringADate(String p_fecha) {
 		java.util.Date retorno = null;

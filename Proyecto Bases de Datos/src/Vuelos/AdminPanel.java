@@ -2,14 +2,13 @@ package Vuelos;
 
 import quick.dbtable.DBTable;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JTextArea;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.JScrollPane;
+import javax.swing.JComboBox;
 
 @SuppressWarnings("serial")
 public class AdminPanel extends MainPanel {
@@ -18,8 +17,7 @@ public class AdminPanel extends MainPanel {
 	private JLabel lblDescription;
 	private JButton btnConsult;
 	private JTextArea textCommand;
-	private JList<String> listTables;
-	private JList<String> listAttributes;
+	private JComboBox<String> cbTables, cbAttributes;
 
 	/**
 	 * Create the panel.
@@ -28,14 +26,14 @@ public class AdminPanel extends MainPanel {
 		this.table = table;
 		initGUI();
 		dataConnection = DataBaseConnection.getInstance();
-		llenarListaTablas();
+		fillComboBoxTable();
 	}
 
 	private void initGUI() {
 		setBounds(100, 100, 1024, 600);
 		setLayout(null);
 
-		table.setBounds(312, 160, 682, 384);
+		table.setBounds(204, 160, 808, 384);
 		this.add(table);
 		table.setVisible(true);
 
@@ -57,65 +55,61 @@ public class AdminPanel extends MainPanel {
 		textCommand.setBounds(scrollPane.getBounds());
 		textCommand.setVisible(true);
 		scrollPane.setViewportView(textCommand);
-		
+
 		btnConsult.setVisible(true);
-		
-		listTables = new JList<String>();
-		listAttributes = new JList<String>();
-		add(listTables);
-		add(listAttributes);
-		listTables.setVisible(true);
-		listAttributes.setVisible(true);
-		listTables.setBounds(12, 197, 150, 347);
-		listAttributes.setBounds(174, 197, 120, 347);
 
 		JLabel lblTables = new JLabel("Tablas");
 		lblTables.setBounds(10, 160, 150, 25);
 		add(lblTables);
 
 		JLabel lblAttributes = new JLabel("Atributos");
-		lblAttributes.setBounds(174, 160, 120, 25);
+		lblAttributes.setBounds(12, 271, 120, 25);
 		add(lblAttributes);
 
+		cbTables = new JComboBox<String>();
+		cbTables.setBounds(12, 197, 180, 24);
+		add(cbTables);
+
+		cbAttributes = new JComboBox<String>();
+		cbAttributes.setBounds(12, 308, 180, 24);
+		add(cbAttributes);
+		
 		btnConsult.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				refrescarTabla();
+				String query = textCommand.getText().trim();
+				DefaultComboBoxModel<String> model = new DefaultComboBoxModel<String>();
+				cbAttributes.setModel(model);
+				dataConnection.refreshTable(table, query);
+				fillComboBoxTable();
 			}
 		});
 
-		listTables.addListSelectionListener(new ListSelectionListener() {
-			public void valueChanged(ListSelectionEvent arg0) {
-				String nombreTabla = listTables.getSelectedValue().toString();
-				llenarListaAtributos(nombreTabla);
+		cbTables.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				String msj = "Describe " + cbTables.getSelectedItem().toString() + ";";
+				fillComboBoxAttributes(msj);
 			}
 		});
 
-		listAttributes.addListSelectionListener(new ListSelectionListener() {
-			public void valueChanged(ListSelectionEvent arg0) {
-				String message = "select " + listAttributes.getSelectedValue() + " from "
-						+ listTables.getSelectedValue() + ";";
+		cbAttributes.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				String message = "select " + cbAttributes.getSelectedItem().toString() + " from "
+						+ cbTables.getSelectedItem().toString() + ";";
 				dataConnection.refreshTable(table, message);
 			}
 		});
-
 	}
 
-	private void llenarListaTablas() {
+	private void fillComboBoxAttributes(String msj) {
+		dataConnection.refreshExcecute(msj, cbAttributes, this);
+	}
+
+	private void fillComboBoxTable() {
 		String message = "show tables;";
-		dataConnection.refreshExcecute(message, listTables, this);
-	}
-
-	private void llenarListaAtributos(String tabla) {
-		String message = "Describe " + tabla + ";";
-		dataConnection.refreshExcecute(message, listAttributes, this);
+		dataConnection.refreshExcecute(message, cbTables, this);
 	}
 
 	public DBTable getDBTable() {
 		return table;
-	}
-
-	private void refrescarTabla() {
-		String query = this.textCommand.getText().trim();
-		dataConnection.refreshTable(table, query);
 	}
 }

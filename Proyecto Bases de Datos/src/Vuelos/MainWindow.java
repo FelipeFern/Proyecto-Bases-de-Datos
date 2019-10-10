@@ -65,7 +65,7 @@ public class MainWindow extends JFrame {
 		JMenuItem mntmLogin = new JMenuItem("Ingresar");
 		mntmLogin.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				setAllToVisible();
+				actionLogin();
 			}
 		});
 		mnArchivo.add(mntmLogin);
@@ -73,6 +73,9 @@ public class MainWindow extends JFrame {
 		JMenuItem mntmExit = new JMenuItem("Salir");
 		mntmExit.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				if (mntmLogout.isEnabled()) {
+					actionDisconnect();
+				}
 				exitAction();
 			}
 		});
@@ -80,98 +83,100 @@ public class MainWindow extends JFrame {
 		mntmLogout = new JMenuItem("Desconectarse");
 		mntmLogout.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				DBTable table = contentPane.getDBTable();
-				if (table != null) {
-					connection.disconnectDataBase(table);
-				}
-				initContentPane();
-				contentPane.setVisible(true);
-				mntmLogout.setEnabled(false);
-				getFrame().repaint();
+				actionDisconnect();
 			}
 		});
 		mnArchivo.add(mntmLogout);
 		mnArchivo.add(mntmExit);
 		mntmLogout.setEnabled(false);
 	}
-
+	
 	private void initContentPane() {
 		contentPane = new MainPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
+		contentPane.setVisible(true);
 
 		btnLogin = new JButton("Ingresar");
-		btnLogin.setBounds(12, 12, 114, 25);
+		btnLogin.setBounds(415, 314, 114, 25);
 		contentPane.add(btnLogin);
-		btnLogin.setEnabled(false);
-		btnLogin.setVisible(false);
+		btnLogin.setVisible(true);
 		btnLogin.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				DBTable table = new DBTable();
-				String username = tFieldUser.getText();
-				String password = new String(passwordField.getPassword());
-				if (connection.connectToDatabase(table, username, password)) {
-					if (username.equals("admin")) {
-						contentPane = new AdminPanel(table);
-					} else {
-						DBTable table2 = new DBTable();
-						connection.connectToDatabase(table2, username, password);
-						contentPane = new EmployeePanel(table, table2);
-					}
-					setContentPane(contentPane);
-					setVisible(true);
-					mntmLogout.setEnabled(true);
-				}
+				actionLogin();
 			}
 		});
 
 		lblUser = new JLabel("Usuario");
 		lblUser.setHorizontalAlignment(SwingConstants.CENTER);
-		lblUser.setBounds(12, 90, 85, 25);
+		lblUser.setBounds(363, 220, 85, 25);
 		lblUser.setBorder(BorderFactory.createLineBorder(Color.black));
-		lblUser.setVisible(false);
-		lblUser.setEnabled(false);
 		contentPane.add(lblUser);
+		lblUser.setVisible(true);
 
 		lblPassword = new JLabel("Contraseña");
 		lblPassword.setHorizontalAlignment(SwingConstants.CENTER);
-		lblPassword.setBounds(12, 141, 85, 25);
+		lblPassword.setBounds(363, 257, 85, 25);
 		lblPassword.setBorder(BorderFactory.createLineBorder(Color.black));
-		lblPassword.setVisible(false);
-		lblPassword.setEnabled(false);
 		contentPane.add(lblPassword);
+		lblPassword.setVisible(true);
 
 		tFieldUser = new JTextField();
 		tFieldUser.setHorizontalAlignment(SwingConstants.CENTER);
 		tFieldUser.setToolTipText("");
 		tFieldUser.setColumns(10);
-		tFieldUser.setBounds(115, 90, 200, 25);
-		tFieldUser.setVisible(false);
-		tFieldUser.setEnabled(false);
+		tFieldUser.setBounds(466, 220, 200, 25);
 		contentPane.add(tFieldUser);
+		tFieldUser.setVisible(true);
 
 		passwordField = new JPasswordField();
 		passwordField.setHorizontalAlignment(SwingConstants.CENTER);
-		passwordField.setBounds(115, 141, 200, 25);
-		passwordField.setVisible(false);
-		passwordField.setEnabled(false);
+		passwordField.setBounds(466, 257, 200, 25);
 		contentPane.add(passwordField);
+		passwordField.setVisible(true);
 
 		btnCancel = new JButton("Cancelar");
 		btnCancel.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				setAllToNotVisible();
-				btnCancel.setVisible(false);
-				btnCancel.setEnabled(false);
+				passwordField.setText("");
+				tFieldUser.setText("");
 			}
 		});
-		btnCancel.setBounds(12, 49, 114, 25);
-		btnCancel.setEnabled(false);
-		btnCancel.setVisible(false);
+		btnCancel.setBounds(541, 314, 114, 25);
 		contentPane.add(btnCancel);
+		btnCancel.setVisible(true);
 	}
 
+	private void actionDisconnect() {
+		DBTable table = contentPane.getDBTable();
+		if (table != null) {
+			connection.disconnectDataBase(table);
+		}
+		initContentPane();
+		mntmLogout.setEnabled(false);
+		contentPane.revalidate();
+		contentPane.repaint();
+	}
+	
+	private void actionLogin() {
+		DBTable table = new DBTable();
+		String username = tFieldUser.getText();
+		String password = new String(passwordField.getPassword());
+		if (connection.connectToDatabase(table, username, password)) {
+			if (username.equals("admin")) {
+				contentPane = new AdminPanel(table);
+			} else {
+				DBTable table2 = new DBTable();
+				connection.connectToDatabase(table2, username, password);
+				contentPane = new EmployeePanel(table, table2);
+			}
+			setContentPane(contentPane);
+			setVisible(true);
+			mntmLogout.setEnabled(true);
+		}
+	}
+	
 	private JFrame getFrame() {
 		return this;
 	}
@@ -184,35 +189,5 @@ public class MainWindow extends JFrame {
 			Frame f = getFrame();
 			f.dispose();
 		}
-	}
-
-	private void setAllToNotVisible() {
-		passwordField.setVisible(false);
-		passwordField.setEnabled(false);
-		passwordField.setText("");
-		tFieldUser.setVisible(false);
-		tFieldUser.setEnabled(false);
-		tFieldUser.setText("");
-		lblUser.setVisible(false);
-		lblUser.setEnabled(false);
-		lblPassword.setVisible(false);
-		lblPassword.setEnabled(false);
-		btnLogin.setEnabled(false);
-		btnLogin.setVisible(false);
-	}
-
-	private void setAllToVisible() {
-		passwordField.setVisible(true);
-		passwordField.setEnabled(true);
-		tFieldUser.setVisible(true);
-		tFieldUser.setEnabled(true);
-		lblUser.setVisible(true);
-		lblUser.setEnabled(true);
-		lblPassword.setVisible(true);
-		lblPassword.setEnabled(true);
-		btnCancel.setEnabled(true);
-		btnCancel.setVisible(true);
-		btnLogin.setEnabled(true);
-		btnLogin.setVisible(true);
 	}
 }

@@ -6,20 +6,15 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.DefaultListModel;
 import javax.swing.JComboBox;
-import javax.swing.JList;
 import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-
 import quick.dbtable.DBTable;
 
 public class DataBaseConnection {
 	private java.sql.Connection connection;
 	private static DataBaseConnection INSTANCE;
 
-	private DataBaseConnection() {
-	}
+	private DataBaseConnection() {}
 
 	public static DataBaseConnection getInstance() {
 		if (INSTANCE == null) {
@@ -33,7 +28,8 @@ public class DataBaseConnection {
 			String driver = "com.mysql.jdbc.Driver";
 			String servidor = "localhost:3306";
 			String baseDatos = "vuelos";
-			String url = "jdbc:mysql://" + servidor + "/" + baseDatos +"?serverTimezone=America/Argentina/Buenos_Aires";
+			String url = "jdbc:mysql://" + servidor + "/" + baseDatos
+					+ "?serverTimezone=America/Argentina/Buenos_Aires";
 			if (username.equals("admin")) {
 				table.connectDatabase(driver, url, username, password);
 				connection = DriverManager.getConnection(url, username, password);
@@ -44,12 +40,8 @@ public class DataBaseConnection {
 			}
 			return true;
 		} catch (SQLException ex) {
-			JOptionPane.showMessageDialog(MainWindow.getInstance(),
-					"Se produjo un error al intentar conectarse a la base de datos.\nPor favor, revise el usuario y contraseña",
-					"Error", JOptionPane.ERROR_MESSAGE);
-			System.out.println("SQLException: " + ex.getMessage());
-			System.out.println("SQLState: " + ex.getSQLState());
-			System.out.println("VendorError: " + ex.getErrorCode());
+			String msj = "Se produjo un error al intentar conectarse a la base de datos.\nPor favor, revise el usuario y contraseña";
+			printSqlException(ex, msj);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -60,24 +52,20 @@ public class DataBaseConnection {
 		try {
 			table.connectDatabase(driver, url, "empleado", "empleado");
 			connection = DriverManager.getConnection(url, "empleado", "empleado");
-			String query = "SELECT legajo, password FROM empleados WHERE '" + password + "' = password AND "
-					+ username + " = legajo;";
+			String query = "SELECT legajo, password FROM empleados WHERE  password = md5('" + password + "') AND " + username
+					+ " = legajo;";
 			Statement s = (Statement) connection.createStatement();
 			s.executeQuery(query);
 			ResultSet rs = s.getResultSet();
-			if (rs.next()) { 		// Contiene el legajo - password ingresados
+			if (rs.next()) {
 				return true;
 			}
 			disconnectDataBase(table);
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		} catch (SQLException e) {
-			JOptionPane.showMessageDialog(MainWindow.getInstance(),
-					"Se produjo un error al intentar conectarse a la base de datos.\nPor favor, revise el usuario y contraseña",
-					"Error", JOptionPane.ERROR_MESSAGE);
-			System.out.println("SQLException: " + e.getMessage());
-			System.out.println("SQLState: " + e.getSQLState());
-			System.out.println("VendorError: " + e.getErrorCode());
+			String msj = "Se produjo un error al intentar conectarse a la base de datos.\nPor favor, revise el usuario y contraseña";
+			printSqlException(e, msj);
 		}
 		return false;
 	}
@@ -90,15 +78,27 @@ public class DataBaseConnection {
 			}
 			table.close();
 		} catch (SQLException ex) {
-			System.out.println("SQLExcepcion " + ex.getMessage());
-			System.out.println("SQLEstado: " + ex.getSQLState());
-			System.out.println("CodigoError: " + ex.getErrorCode());
+			printSqlException(ex, "");
 		}
 	}
 
-	public void refreshTable(DBTable table, String consult) {
+	public void refreshTable(DBTable table, String query) {
+		if (checkSelect(query)) {
+			refreshTableQuery(table, query);
+		} else {
+			try {
+				Statement s = (Statement) connection.createStatement();
+				s.execute(query);				
+			} catch (SQLException e) {
+				String msj = "Error al ejecutar la sentencia, revise que sea una operacion válida";
+				printSqlException(e, msj);
+			}
+		}
+	}
+
+	private void refreshTableQuery(DBTable table, String query) {
 		try {
-			table.setSelectSql(consult);
+			table.setSelectSql(query);
 			table.createColumnModelFromQuery();
 			for (int i = 0; i < table.getColumnCount(); i++) {
 				if (table.getColumn(i).getType() == Types.TIME) {
@@ -110,37 +110,22 @@ public class DataBaseConnection {
 			}
 			table.refresh();
 		} catch (SQLException ex) {
-			System.out.println("SQLException: " + ex.getMessage());
-			System.out.println("SQLState: " + ex.getSQLState());
-			System.out.println("VendorError: " + ex.getErrorCode());
-			JOptionPane.showMessageDialog(MainWindow.getInstance(), ex.getMessage() + "\n",
-					"Error al ejecutar la consulta.", JOptionPane.ERROR_MESSAGE);
-		} catch (ClassCastException ex) { // Arreglar esto! Con valores nulos se clava.
+			printSqlException(ex, "Error al ejecutar la consulta.");
+		} catch (ClassCastException ex) {
 			System.out.println("Class cast exeption");
-			System.out.println("Consulta: " + consult);
+			System.out.println("Consulta: " + query);
 		}
 	}
-
-	public void refreshExcecute(String message, JList<String> list, MainPanel panel) {
-		try {
-			DefaultListModel<String> model = new DefaultListModel<String>();
-			Statement s = (Statement) connection.createStatement();
-			s.executeQuery(message);
-			ResultSet rs = s.getResultSet();
-			while (rs.next()) {
-				model.addElement(rs.getString(1));
-			}
-			list.setModel(model);
-		} catch (SQLException ex) {
-			System.out.println("SQLExcepcion: " + ex.getMessage());
-			System.out.println("SQLEstado: " + ex.getSQLState());
-			System.out.println("CodigoError: " + ex.getErrorCode());
-			JOptionPane.showMessageDialog(SwingUtilities.getWindowAncestor(panel), ex.getMessage() + "\n",
-					"Error en el acceso.", JOptionPane.ERROR_MESSAGE);
+	
+	private boolean checkSelect(String consult) {
+		consult = consult.toUpperCase();
+		if (consult.contains("SELECT") || consult.contains("DESCRIBE")) {
+			return true;
 		}
+		return false;
 	}
 
-	public void refreshExcecute(String message, JComboBox<String> comboBox, EmployeePanel panel) {
+	public void refreshExcecute(String message, JComboBox<String> comboBox, MainPanel panel) {
 		try {
 			DefaultComboBoxModel<String> model = new DefaultComboBoxModel<String>();
 			Statement s = (Statement) connection.createStatement();
@@ -153,15 +138,18 @@ public class DataBaseConnection {
 				} else {
 					str = rs.getString(1);
 				}
-				model.addElement(str);				
+				model.addElement(str);
 			}
 			comboBox.setModel(model);
 		} catch (SQLException ex) {
-			System.out.println("SQLExcepcion: " + ex.getMessage());
-			System.out.println("SQLEstado: " + ex.getSQLState());
-			System.out.println("CodigoError: " + ex.getErrorCode());
-			JOptionPane.showMessageDialog(SwingUtilities.getWindowAncestor(panel), ex.getMessage() + "\n",
-					"Error en el acceso.", JOptionPane.ERROR_MESSAGE);
+			printSqlException(ex, "Error en el acceso.");
 		}
+	}
+
+	private void printSqlException(SQLException ex, String msj) {
+		System.out.println("SQLException: " + ex.getMessage());
+		System.out.println("SQLState: " + ex.getSQLState());
+		System.out.println("VendorError: " + ex.getErrorCode());
+		JOptionPane.showMessageDialog(MainWindow.getInstance(), ex.getMessage() + "\n", msj, JOptionPane.ERROR_MESSAGE);
 	}
 }
