@@ -6,20 +6,26 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.sql.Date;
+import java.text.ParseException;
 import quick.dbtable.DBTable;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
+import javax.swing.text.MaskFormatter;
 import javax.swing.JRadioButton;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JSeparator;
+import javax.swing.JTextField;
 import javax.swing.JComboBox;
+import javax.swing.JFormattedTextField;
 
 @SuppressWarnings("serial")
 public class EmployeePanel extends MainPanel {
 	private DBTable table, tableDescription;
 	private DataBaseConnection dbConnection;
-	private JComboBox<String> cbCityFrom, cbCityTo, cbDateFrom, cbDateUp;
+	private JComboBox<String> cbCityFrom, cbCityTo;
+	private JFormattedTextField ftfDateFrom, ftfDateUp;
 
 	/**
 	 * Create the panel.
@@ -32,12 +38,11 @@ public class EmployeePanel extends MainPanel {
 		dbConnection = DataBaseConnection.getInstance();
 		initGUI();
 		fillCityComboBox();
-		fillDateComboBox();
 	}
 
 	private void initGUI() {
 		add(table, BorderLayout.CENTER);
-		table.setBounds(12, 120, 1000, 210);
+		table.setBounds(12, 120, 1000, 200);
 		table.setEditable(false);
 		table.addMouseListener(createMouseListener());
 
@@ -53,7 +58,7 @@ public class EmployeePanel extends MainPanel {
 		lblCityTo.setHorizontalAlignment(SwingConstants.CENTER);
 		lblCityTo.setBounds(149, 12, 125, 25);
 		add(lblCityTo);
-		
+
 		JRadioButton rdbtnGoFlights = new JRadioButton("Ida");
 		rdbtnGoFlights.setBounds(282, 45, 110, 25);
 		add(rdbtnGoFlights);
@@ -103,38 +108,58 @@ public class EmployeePanel extends MainPanel {
 
 	private MouseListener createMouseListener() {
 		return new MouseListener() {
-			public void mouseReleased(MouseEvent e) {}
-			public void mousePressed(MouseEvent e) {}
-			public void mouseExited(MouseEvent e) {}
-			public void mouseEntered(MouseEvent e) {}
+			public void mouseReleased(MouseEvent e) {
+			}
+
+			public void mousePressed(MouseEvent e) {
+			}
+
+			public void mouseExited(MouseEvent e) {
+			}
+
+			public void mouseEntered(MouseEvent e) {
+			}
+
 			public void mouseClicked(MouseEvent e) {
 				int row = table.getSelectedRow();
-				Date fechaSalida = Fechas.convertirStringADateSQL(cbDateFrom.getSelectedItem().toString());
+				Date fechaSalida = Fechas.convertirStringADateSQL(ftfDateFrom.getText());
 				String nroVuelo = table.getValueAt(row, 0).toString();
 				String query = "SELECT Numero AS 'Numero Vuelo', NombreClase AS Clase, \n"
 						+ "asientos_disponibles AS 'Asientos disponibles', Precio \n"
-						+ "FROM vuelos_disponibles WHERE Numero = '" + nroVuelo 
-						+ "' AND Fecha = '" + fechaSalida + "' ORDER BY Numero, Fecha;";
+						+ "FROM vuelos_disponibles WHERE Numero = '" + nroVuelo + "' AND Fecha = '" + fechaSalida
+						+ "' ORDER BY Numero, Fecha;";
 				dbConnection.refreshTable(tableDescription, query);
 			}
 		};
 	}
 
 	private void initJFormattedTextFields() {
-		cbDateFrom = new JComboBox<String>();
-		cbDateFrom.setBounds(404, 45, 125, 25);
-		add(cbDateFrom);
 
-		cbDateUp = new JComboBox<String>();
-		cbDateUp.setBounds(541, 45, 125, 24);
-		add(cbDateUp);
+		MaskFormatter dateMask = null;
+		try {
+			dateMask = new MaskFormatter("##/##/####");
+			dateMask.setPlaceholderCharacter('/');
+			dateMask.setValidCharacters("0123456789");
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+
+		ftfDateFrom = new JFormattedTextField(dateMask);
+		ftfDateFrom.setBounds(404, 45, 125, 25);
+		ftfDateFrom.setHorizontalAlignment(JTextField.CENTER);
+		add(ftfDateFrom);
+
+		ftfDateUp = new JFormattedTextField(dateMask);
+		ftfDateUp.setBounds(541, 45, 125, 25);
+		ftfDateUp.setHorizontalAlignment(JTextField.CENTER);
+		add(ftfDateUp);
 
 		cbCityFrom = new JComboBox<String>();
-		cbCityFrom.setBounds(12, 49, 125, 24);
+		cbCityFrom.setBounds(12, 45, 125, 25);
 		add(cbCityFrom);
 
 		cbCityTo = new JComboBox<String>();
-		cbCityTo.setBounds(149, 49, 125, 24);
+		cbCityTo.setBounds(149, 45, 125, 25);
 		add(cbCityTo);
 	}
 
@@ -145,41 +170,58 @@ public class EmployeePanel extends MainPanel {
 		dbConnection.refreshExcecute(message, cbCityFrom, this);
 	}
 
-	private void fillDateComboBox() {
-		String message = "SELECT DISTINCT Fecha FROM vuelos_disponibles;";
-		dbConnection.refreshExcecute(message, cbDateFrom, this);
-		dbConnection.refreshExcecute(message, cbDateUp, this);
-	}
-
 	public DBTable getDBTable() {
 		return table;
 	}
 
 	private void refrescarTablaIda() {
-		String cityFrom = cbCityFrom.getSelectedItem().toString();
-		String cityTo = cbCityTo.getSelectedItem().toString();
-		Date fechaSalida = Fechas.convertirStringADateSQL(cbDateFrom.getSelectedItem().toString());
-		String query = "SELECT vp.Numero as Vuelo, vp.ASalida_nombre as 'Aeropuerto salida',\n"
-				+ "vp.HoraSalida as 'Hora de salida', vp.ALlegada_nombre as 'Aeropuerto llegada',\n "
-				+ "vp.HoraLlegada as 'Hora de llegada', vp.Modelo as 'Mod. Avion', vp.duracion as 'Duracion' \n"
-				+ "FROM vuelos_disponibles as vp WHERE vp.ASalida_ciudad = '" + cityFrom + "' AND "
-				+ "vp.ALlegada_ciudad = '" + cityTo + "' AND vp.Fecha = '" + fechaSalida
-				+ "' ORDER BY vp.Fecha, vp.ASalida_ciudad, vp.ALlegada_ciudad, vp.NombreClase;";
-		dbConnection.refreshTable(table, query);
+		try {
+			String cityFrom = cbCityFrom.getSelectedItem().toString();
+			String cityTo = cbCityTo.getSelectedItem().toString();
+			Date fechaSalida = getFromDate();
+			String query = "SELECT vp.Numero as Vuelo, vp.ASalida_nombre as 'Aeropuerto salida',\n"
+					+ "vp.HoraSalida as 'Hora de salida', vp.ALlegada_nombre as 'Aeropuerto llegada',\n "
+					+ "vp.HoraLlegada as 'Hora de llegada', vp.Modelo as 'Mod. Avion', vp.duracion as 'Duracion' \n"
+					+ "FROM vuelos_disponibles as vp WHERE vp.ASalida_ciudad = '" + cityFrom + "' AND "
+					+ "vp.ALlegada_ciudad = '" + cityTo + "' AND vp.Fecha = '" + fechaSalida
+					+ "' ORDER BY vp.Fecha, vp.ASalida_ciudad, vp.ALlegada_ciudad, vp.NombreClase;";
+			dbConnection.refreshTable(table, query);
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(this, e.getMessage());
+		}
+	}
+
+	private Date getFromDate() throws Exception {
+		if (Fechas.validar(ftfDateFrom.getText()))
+			return Fechas.convertirStringADateSQL(ftfDateFrom.getText());
+		else
+			throw new Exception("Alguna de las fechas ingresadas no es correcta, por favor reviselas nuevamente");
+	}
+
+	private Date getUpDate() {
+		return Fechas.convertirStringADateSQL(ftfDateUp.getText());
 	}
 
 	private void refrescarTablaIdaYVuelta() {
-		String cityFrom = cbCityFrom.getSelectedItem().toString();
-		String cityTo = cbCityTo.getSelectedItem().toString();
-		Date fechaSalida = Fechas.convertirStringADateSQL(cbDateFrom.getSelectedItem().toString());
-		Date fechaVuelta = Fechas.convertirStringADateSQL(cbDateUp.getSelectedItem().toString());
-		String query = "SELECT vp.Numero as Vuelo, vp.ASalida_nombre as 'Aeropuerto salida',\n"
-				+ "vp.HoraSalida as 'Hora de salida', vp.ALlegada_nombre as 'Aeropuerto llegada',\n "
-				+ "vp.HoraLlegada as 'Hora de llegada', vp.Modelo as 'Mod. Avion', vp.duracion as 'Duracion' \n"
-				+ "FROM vuelos_disponibles as vp WHERE (vp.ASalida_ciudad = '" + cityFrom + "' AND \n"
-				+ "vp.ALlegada_ciudad = '" + cityTo + "' AND vp.Fecha = '" + fechaSalida + "') OR \n"
-				+ "(vp.ASalida_ciudad = '" + cityTo + "' AND vp.ALlegada_ciudad = '" + cityFrom + "' AND \n"
-				+ "vp.Fecha = '" + fechaVuelta + "') ORDER BY vp.Fecha, vp.ASalida_ciudad, vp.ALlegada_ciudad, vp.NombreClase;";
-		dbConnection.refreshTable(table, query);
+		try {
+			String cityFrom = cbCityFrom.getSelectedItem().toString();
+			String cityTo = cbCityTo.getSelectedItem().toString();
+			Date fechaSalida = getFromDate();
+			Date fechaVuelta = getUpDate();
+			if (fechaSalida.before(fechaVuelta)) {
+				String query = "SELECT vp.Numero as Vuelo, vp.ASalida_nombre as 'Aeropuerto salida',\n"
+						+ "vp.HoraSalida as 'Hora de salida', vp.ALlegada_nombre as 'Aeropuerto llegada',\n "
+						+ "vp.HoraLlegada as 'Hora de llegada', vp.Modelo as 'Mod. Avion', vp.duracion as 'Duracion' \n"
+						+ "FROM vuelos_disponibles as vp WHERE (vp.ASalida_ciudad = '" + cityFrom + "' AND \n"
+						+ "vp.ALlegada_ciudad = '" + cityTo + "' AND vp.Fecha = '" + fechaSalida + "') OR \n"
+						+ "(vp.ASalida_ciudad = '" + cityTo + "' AND vp.ALlegada_ciudad = '" + cityFrom + "' AND \n"
+						+ "vp.Fecha = '" + fechaVuelta
+						+ "') ORDER BY vp.Fecha, vp.ASalida_ciudad, vp.ALlegada_ciudad, vp.NombreClase;";
+				dbConnection.refreshTable(table, query);
+
+			}
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(this, e.getMessage());
+		}
 	}
 }

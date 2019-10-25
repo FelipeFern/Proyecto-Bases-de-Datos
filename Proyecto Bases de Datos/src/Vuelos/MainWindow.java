@@ -53,9 +53,9 @@ public class MainWindow extends JFrame {
 	}
 
 	private void initGUI() {
-		setBounds(100, 100, 1024, 600);
+		setBounds(0, 0, 1350, 725);
 		setResizable(false);
-
+		
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
 
@@ -90,7 +90,7 @@ public class MainWindow extends JFrame {
 		mnArchivo.add(mntmExit);
 		mntmLogout.setEnabled(false);
 	}
-	
+
 	private void initContentPane() {
 		contentPane = new MainPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -99,7 +99,7 @@ public class MainWindow extends JFrame {
 		contentPane.setVisible(true);
 
 		btnLogin = new JButton("Ingresar");
-		btnLogin.setBounds(415, 314, 114, 25);
+		btnLogin.setBounds(529, 292, 114, 25);
 		contentPane.add(btnLogin);
 		btnLogin.setVisible(true);
 		btnLogin.addActionListener(new ActionListener() {
@@ -110,14 +110,14 @@ public class MainWindow extends JFrame {
 
 		lblUser = new JLabel("Usuario");
 		lblUser.setHorizontalAlignment(SwingConstants.CENTER);
-		lblUser.setBounds(363, 220, 85, 25);
+		lblUser.setBounds(505, 220, 85, 25);
 		lblUser.setBorder(BorderFactory.createLineBorder(Color.black));
 		contentPane.add(lblUser);
 		lblUser.setVisible(true);
 
-		lblPassword = new JLabel("ContraseÃ±a");
+		lblPassword = new JLabel("Contraseña");
 		lblPassword.setHorizontalAlignment(SwingConstants.CENTER);
-		lblPassword.setBounds(363, 257, 85, 25);
+		lblPassword.setBounds(505, 256, 85, 25);
 		lblPassword.setBorder(BorderFactory.createLineBorder(Color.black));
 		contentPane.add(lblPassword);
 		lblPassword.setVisible(true);
@@ -126,13 +126,13 @@ public class MainWindow extends JFrame {
 		tFieldUser.setHorizontalAlignment(SwingConstants.CENTER);
 		tFieldUser.setToolTipText("");
 		tFieldUser.setColumns(10);
-		tFieldUser.setBounds(466, 220, 200, 25);
+		tFieldUser.setBounds(600, 220, 200, 25);
 		contentPane.add(tFieldUser);
 		tFieldUser.setVisible(true);
 
 		passwordField = new JPasswordField();
 		passwordField.setHorizontalAlignment(SwingConstants.CENTER);
-		passwordField.setBounds(466, 257, 200, 25);
+		passwordField.setBounds(600, 257, 200, 25);
 		contentPane.add(passwordField);
 		passwordField.setVisible(true);
 
@@ -143,7 +143,7 @@ public class MainWindow extends JFrame {
 				tFieldUser.setText("");
 			}
 		});
-		btnCancel.setBounds(541, 314, 114, 25);
+		btnCancel.setBounds(669, 292, 114, 25);
 		contentPane.add(btnCancel);
 		btnCancel.setVisible(true);
 	}
@@ -158,7 +158,7 @@ public class MainWindow extends JFrame {
 		contentPane.revalidate();
 		contentPane.repaint();
 	}
-	
+
 	private void actionLogin() {
 		DBTable table = new DBTable();
 		String username = tFieldUser.getText();
@@ -176,7 +176,7 @@ public class MainWindow extends JFrame {
 			mntmLogout.setEnabled(true);
 		}
 	}
-	
+
 	private JFrame getFrame() {
 		return this;
 	}

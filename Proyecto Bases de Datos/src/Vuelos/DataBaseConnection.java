@@ -14,7 +14,8 @@ public class DataBaseConnection {
 	private java.sql.Connection connection;
 	private static DataBaseConnection INSTANCE;
 
-	private DataBaseConnection() {}
+	private DataBaseConnection() {
+	}
 
 	public static DataBaseConnection getInstance() {
 		if (INSTANCE == null) {
@@ -41,7 +42,7 @@ public class DataBaseConnection {
 			return true;
 		} catch (SQLException ex) {
 			String msj = "Se produjo un error al intentar conectarse a la base de datos.\nPor favor, revise el usuario y contraseña";
-			printSqlException(ex, msj);
+			printSqlException(ex, msj, "Error de conexion.");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -52,8 +53,8 @@ public class DataBaseConnection {
 		try {
 			table.connectDatabase(driver, url, "empleado", "empleado");
 			connection = DriverManager.getConnection(url, "empleado", "empleado");
-			String query = "SELECT legajo, password FROM empleados WHERE  password = md5('" + password + "') AND " + username
-					+ " = legajo;";
+			String query = "SELECT legajo, password FROM empleados WHERE  password = md5('" + password + "') AND "
+					+ username + " = legajo;";
 			Statement s = (Statement) connection.createStatement();
 			s.executeQuery(query);
 			ResultSet rs = s.getResultSet();
@@ -65,7 +66,7 @@ public class DataBaseConnection {
 			e.printStackTrace();
 		} catch (SQLException e) {
 			String msj = "Se produjo un error al intentar conectarse a la base de datos.\nPor favor, revise el usuario y contraseña";
-			printSqlException(e, msj);
+			printSqlException(e, msj, "Error de conexion.");
 		}
 		return false;
 	}
@@ -78,45 +79,41 @@ public class DataBaseConnection {
 			}
 			table.close();
 		} catch (SQLException ex) {
-			printSqlException(ex, "");
+			printSqlException(ex, "Error al desconectarse de la base de datos.", "Error de desconexion");
 		}
 	}
 
 	public void refreshTable(DBTable table, String query) {
-		if (checkSelect(query)) {
-			refreshTableQuery(table, query);
-		} else {
-			try {
-				Statement s = (Statement) connection.createStatement();
-				s.execute(query);				
-			} catch (SQLException e) {
-				String msj = "Error al ejecutar la sentencia, revise que sea una operacion válida";
-				printSqlException(e, msj);
-			}
-		}
-	}
-
-	private void refreshTableQuery(DBTable table, String query) {
 		try {
-			table.setSelectSql(query);
-			table.createColumnModelFromQuery();
-			for (int i = 0; i < table.getColumnCount(); i++) {
-				if (table.getColumn(i).getType() == Types.TIME) {
-					table.getColumn(i).setType(Types.CHAR);
-				}
-				if (table.getColumn(i).getType() == Types.DATE) {
-					table.getColumn(i).setDateFormat("dd/MM/YYYY");
-				}
+			if (checkSelect(query)) {
+				refreshTableQuery(table, query);
+			} else {
+				Statement s = (Statement) connection.createStatement();
+				s.execute(query);
 			}
-			table.refresh();
-		} catch (SQLException ex) {
-			printSqlException(ex, "Error al ejecutar la consulta.");
+		} catch (SQLException e) {
+			String msj = "Error al obtener datos.";
+			printSqlException(e, msj, "Error al refrescar la tabla.");
 		} catch (ClassCastException ex) {
 			System.out.println("Class cast exeption");
 			System.out.println("Consulta: " + query);
 		}
 	}
-	
+
+	private void refreshTableQuery(DBTable table, String query) throws SQLException {
+		table.setSelectSql(query);
+		table.createColumnModelFromQuery();
+		for (int i = 0; i < table.getColumnCount(); i++) {
+			if (table.getColumn(i).getType() == Types.TIME) {
+				table.getColumn(i).setType(Types.CHAR);
+			}
+			if (table.getColumn(i).getType() == Types.DATE) {
+				table.getColumn(i).setDateFormat("dd/MM/YYYY");
+			}
+		}
+		table.refresh();
+	}
+
 	private boolean checkSelect(String consult) {
 		consult = consult.toUpperCase();
 		if (consult.contains("SELECT") || consult.contains("DESCRIBE")) {
@@ -142,14 +139,14 @@ public class DataBaseConnection {
 			}
 			comboBox.setModel(model);
 		} catch (SQLException ex) {
-			printSqlException(ex, "Error en el acceso.");
+			printSqlException(ex, "Error al obtener datos.", "Error de conexion.");
 		}
 	}
 
-	private void printSqlException(SQLException ex, String msj) {
+	private void printSqlException(SQLException ex, String msj, String description) {
 		System.out.println("SQLException: " + ex.getMessage());
 		System.out.println("SQLState: " + ex.getSQLState());
 		System.out.println("VendorError: " + ex.getErrorCode());
-		JOptionPane.showMessageDialog(MainWindow.getInstance(), ex.getMessage() + "\n", msj, JOptionPane.ERROR_MESSAGE);
+		JOptionPane.showMessageDialog(MainWindow.getInstance(), msj, description, JOptionPane.ERROR_MESSAGE);
 	}
 }
