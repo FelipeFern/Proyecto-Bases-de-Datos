@@ -160,7 +160,7 @@ CREATE TABLE instancias_vuelo (
   fecha DATE NOT NULL,
   estado VARCHAR(50),
   
-   CONSTRAINT pk_instancias
+  CONSTRAINT pk_instancias
   PRIMARY KEY (vuelo, fecha),
 
   FOREIGN KEY (vuelo, dia) REFERENCES salidas(vuelo, dia)
@@ -321,8 +321,9 @@ begin
 	DECLARE estado CHAR(100);	
 	DECLARE numeroReserva INT;
 	
+	#Si se produce una SQLEXCEPTION, se retrocede la transacción con ROLLBACK
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
-	BEGIN # Si se produce una SQLEXCEPTION, se retrocede la transacción con ROLLBACK
+	BEGIN 
 	SELECT 'SQLEXCEPTION!, transaccion abortada' as Resultado;
 	ROLLBACK;
 	END;
@@ -389,6 +390,13 @@ begin
 	DECLARE asientosDisponiblesVuelta INT;
 	DECLARE estadoVuelta CHAR(100);
 	DECLARE numeroReserva INT;
+	
+	#Si se produce una SQLEXCEPTION, se retrocede la transacción con ROLLBACK
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+	BEGIN 
+	SELECT 'SQLEXCEPTION!, transaccion abortada' as Resultado;
+	ROLLBACK;
+	END;
 
 	#Recupero datos del vuelo Ida
 	SELECT asientos_disponibles INTO asientosDisponiblesIda FROM vuelos_disponibles as vp WHERE vp.Numero = numeroIda AND vp.Fecha = fechaIda AND vp.NombreClase = claseIda;
@@ -476,6 +484,43 @@ delimiter ;
 	 INSERT INTO salidas(vuelo, dia, hora_sale, hora_llega, modelo_avion) VALUES ('BC1','lu', '08:00:00', '09:00:00', 'B-737'); //Para el trigger
 	
 */
+
+
+#-------------------------------------------------------------------------
+#Creaciones de TRIGGERS
+
+delimiter !
+CREATE TRIGGER cargar_instancias_vuelo 
+AFTER INSERT ON salidas FOR EACH ROW 
+BEGIN
+	
+	#declaracion de variables
+	DECLARE fecha_insercion DATE;
+	DECLARE X INT;
+	DECLARE Y INT;	
+	#--DECLARE ANIO INT;
+	
+	#Inicializacion de variables
+	SET fecha_insercion = curdate();
+	SET X = 365;
+	SET Y = 0;
+	#--ANIO = SELECT YEAR(curdate());
+
+/*
+	#Checkeamos si es biciesto
+	IF ((MOD(ANIO, 4) = 0 AND MOD(ANIO, 100) <> 0) OR (MOD(ANIO, 400) = 0) THEN
+		SET X = X + 1;
+	END IF;
+*/
+	#Bucle de insercion en instancias_vuelo
+	WHILE Y < X DO
+		INSERT INTO instancias_vuelo(vuelo, fecha, dia estado) 
+		VALUES (NEW.vuelo, DATEADD(curdate(), Y), NEW.dia, 'a tiempo');
+		SET Y = Y + 1;
+	END WHILE;
+END; !
+delimiter ;
+
 
 # ------------------------------------------------------------------------
 # Creacion usuario admin  
