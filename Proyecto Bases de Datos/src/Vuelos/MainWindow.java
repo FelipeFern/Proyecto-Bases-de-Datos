@@ -168,8 +168,10 @@ public class MainWindow extends JFrame {
 				contentPane = new AdminPanel(table);
 			} else {
 				DBTable table2 = new DBTable();
+				DBTable table3 = new DBTable();
 				connection.connectToDatabase(table2, username, password);
-				contentPane = new EmployeePanel(table, table2);
+				connection.connectToDatabase(table3, username, password);
+				contentPane = new EmployeePanel(table, table2, table3);
 			}
 			setContentPane(contentPane);
 			setVisible(true);

@@ -22,7 +22,7 @@ import javax.swing.JFormattedTextField;
 
 @SuppressWarnings("serial")
 public class EmployeePanel extends MainPanel {
-	private DBTable table, tableDescription;
+	private DBTable table, tableDescription, tableBackFlyghts;
 	private DataBaseConnection dbConnection;
 	private JComboBox<String> cbCityFrom, cbCityTo;
 	private JFormattedTextField ftfDateFrom, ftfDateUp;
@@ -30,9 +30,10 @@ public class EmployeePanel extends MainPanel {
 	/**
 	 * Create the panel.
 	 */
-	public EmployeePanel(DBTable table, DBTable table2) {
+	public EmployeePanel(DBTable table, DBTable table2, DBTable table3) {
 		this.table = table;
 		this.tableDescription = table2;
+		this.tableBackFlyghts = table3;
 		setBounds(100, 100, 1024, 600);
 		setLayout(null);
 		dbConnection = DataBaseConnection.getInstance();
@@ -42,9 +43,11 @@ public class EmployeePanel extends MainPanel {
 
 	private void initGUI() {
 		add(table, BorderLayout.CENTER);
-		table.setBounds(12, 120, 1000, 200);
+		table.setBounds(59, 120, 953, 150);
 		table.setEditable(false);
-		table.addMouseListener(createMouseListener());
+		table.addMouseListener(createMouseListener());	
+		
+		tableBackFlyghts.setBounds(12, 120, 1000, 150);
 
 		tableDescription.setBounds(12, 340, 1000, 200);
 		add(tableDescription);
@@ -161,6 +164,14 @@ public class EmployeePanel extends MainPanel {
 		cbCityTo = new JComboBox<String>();
 		cbCityTo.setBounds(149, 45, 125, 25);
 		add(cbCityTo);
+		
+		JLabel lblIda = new JLabel("Ida");
+		lblIda.setBounds(12, 120, 35, 25);
+		add(lblIda);
+		
+		JLabel lblNewLabel = new JLabel("New label");
+		lblNewLabel.setBounds(12, 238, 46, 14);
+		add(lblNewLabel);
 	}
 
 	private void fillCityComboBox() {
