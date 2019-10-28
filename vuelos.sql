@@ -299,8 +299,202 @@ FROM vuelos_programados AS vp JOIN aeropuertos AS allegada ON vp.aeropuerto_lleg
 
 WHERE iv.fecha > NOW();
     
-  
-  
+	
+	
+	
+#-------------------------------------------------------------------------
+#Creaciones de Stored Procedures.
+
+delimiter !
+
+# Solo viaje de ida
+
+create procedure reservaVueloIda(IN numero VARCHAR(50), IN clase VARCHAR(20), IN fecha DATE, IN tipo_doc VARCHAR(5), IN numero_doc INT, IN legajo INT)
+begin	
+	
+	#declaracion de variables
+	DECLARE asientosReservados INT;
+	DECLARE asientosBrindados INT;
+	DECLARE asientosDisponibles INT;
+	DECLARE estado CHAR(100);	
+	DECLARE numeroReserva INT;
+	
+	#Recupero la cantidad de reservas realizadas para esa clase en ese vuelo
+	SELECT asientos_disponibles INTO asientosDisponibles FROM vuelos_disponibles as vp WHERE vp.Numero = numero AND vp.Fecha = fecha AND vp.NombreClase = clase;
+	SELECT b.cant_asientos INTO asientosBrindados 
+		FROM brinda as b JOIN instancias_vuelo as iv ON b.vuelo = iv.vuelo AND b.dia = iv.dia 
+		WHERE b.vuelo = numero AND b.clase = clase AND iv.fecha = fecha;
+	
+	SELECT count(*) INTO asientosReservados FROM reserva_vuelo_clase rvc WHERE rvc.vuelo = numero AND rvc.fecha_vuelo = fecha;
+	
+	#----Tendria que ser asi, pero tira error porque la tabla esta vacia.
+	#--SELECT as.cantidad INTO asientosReservados FROM asientos_reservados as ar WHERE ar.vuelo = numero AND ar.fecha = fecha AND ar.clase = clase FOR UPDATE;
+
+	if NOT EXISTS(SELECT * FROM empleados as e WHERE e.legajo = legajo) then
+		 SELECT 'El empleado ingresado no existe' as Resultado;
+	else 
+		if NOT EXISTS(SELECT * FROM instancias_vuelo as iv WHERE fecha = iv.fecha AND iv.vuelo = numero) then
+			SELECT 'El vuelo ingresado para esa fecha no existe' as Resultado;
+		else 
+			if NOT EXISTS(SELECT * FROM pasajeros as p WHERE p.doc_tipo = tipo_doc AND p.doc_nro = numero_doc) then
+			SELECT 'El pasajero no existe' as Resultado;
+			else 
+				if asientosDisponibles < 0 then
+					SELECT 'No hay mas asientos disponibles' as Resultado;
+				else
+					#Todos los datos son correctos y se crea la reserva
+					if asientosBrindados < asientosReservados then
+						SET estado = 'en Espera';
+					else
+						SET estado = 'Confirmada';
+					end if;			
+						START TRANSACTION;
+							
+							# Ingreso la reserva en reservas
+								INSERT INTO reservas(numero, doc_tipo, doc_nro, legajo, fecha, vencimiento, estado) 
+								VALUES (numeroReserva,tipo_doc , numero_doc, legajo, fecha , DATE_ADD(fecha, INTERVAL -15 day), estado);
+							# Declaro el numero de la reserva a ingresar
+							SET numeroReserva = LAST_INSERT_ID();
+							# Ingreso la reserva en reserva_vuelo_clase
+								INSERT INTO reserva_vuelo_clase(numero, vuelo, fecha_vuelo, clase) 
+								VALUES (numeroReserva, numero, fecha,clase);
+							#UPDATE asientos_reservados as ar SET cantidad = cantidad + 1  WHERE ar.vuelo = numero AND ar.fecha = fecha AND ar.clase = clase; 
+							SELECT 'La reserva se ingreso correctamente' as Resultado;
+							
+						COMMIT;
+				end if;
+			end if;
+		end if;
+	end if;
+		
+end;!  
+delimiter ;
+
+
+delimiter !
+create procedure reservaVueloIdaVuelta(IN numeroIda VARCHAR(50), IN claseIda VARCHAR(20), IN fechaIda DATE,IN numeroVuelta VARCHAR(50), IN claseVuelta VARCHAR(20), IN fechaVuelta DATE, IN tipo_doc VARCHAR(5), IN numero_doc INT, IN legajo INT)
+begin	
+	
+	#declaracion de variables
+	DECLARE asientosReservadosIda INT;
+	DECLARE asientosBrindadosIda INT;
+	DECLARE asientosDisponiblesIda INT;
+	DECLARE estadoIda CHAR(100);	
+	DECLARE asientosReservadosVuelta INT;
+	DECLARE asientosBrindadosVuelta INT;
+	DECLARE asientosDisponiblesVuelta INT;
+	DECLARE estadoVuelta CHAR(100);
+	DECLARE numeroReserva INT;
+
+	#Recupero datos del vuelo Ida
+	SELECT asientos_disponibles INTO asientosDisponiblesIda FROM vuelos_disponibles as vp WHERE vp.Numero = numeroIda AND vp.Fecha = fechaIda AND vp.NombreClase = claseIda;
+	SELECT b.cant_asientos INTO asientosBrindadosIda 
+		FROM brinda as b JOIN instancias_vuelo as iv ON b.vuelo = iv.vuelo AND b.dia = iv.dia 
+		WHERE b.vuelo = numeroIda AND b.clase = claseIda AND iv.fecha = fechaIda;
+	SELECT count(*) INTO asientosReservadosIda FROM reserva_vuelo_clase rvc WHERE rvc.vuelo = numeroIDA AND rvc.fecha_vuelo = fechaIda;
+	
+	#Recupero datos del vuelo Vuelta
+	SELECT asientos_disponibles INTO asientosDisponiblesVuelta FROM vuelos_disponibles as vp WHERE vp.Numero = numeroVuelta AND vp.Fecha = fechaVuelta AND vp.NombreClase = claseVuelta;
+	SELECT b.cant_asientos INTO asientosBrindadosVuelta
+		FROM brinda as b JOIN instancias_vuelo as iv ON b.vuelo = iv.vuelo AND b.dia = iv.dia 
+		WHERE b.vuelo = numeroVuelta AND b.clase = claseVuelta AND iv.fecha = fechaVuelta;
+	SELECT count(*) INTO asientosReservadosVuelta FROM reserva_vuelo_clase rvc WHERE rvc.vuelo = numeroVuelta AND rvc.fecha_vuelo = fechaVuelta;
+	
+	/*Esto seria para los ultimos select cuando recuperamos los datos
+	#----Tendria que ser asi, pero tira error porque la tabla esta vacia.
+	#--SELECT as.cantidad INTO asientosReservados FROM asientos_reservados as ar WHERE ar.vuelo = numero AND ar.fecha = fecha AND ar.clase = clase FOR UPDATE;
+	*/
+	
+	if NOT EXISTS(SELECT * FROM empleados as e WHERE e.legajo = legajo) then
+		 SELECT 'El empleado ingresado no existe' as Resultado;
+	else 
+		if NOT EXISTS(SELECT * FROM pasajeros as p WHERE p.doc_tipo = tipo_doc AND p.doc_nro = numero_doc) then
+			SELECT 'El pasajero no existe' as Resultado;
+		else 
+			if NOT EXISTS(SELECT * FROM instancias_vuelo as iv WHERE fechaIda = iv.fecha AND iv.vuelo = numeroVuelta) then
+				SELECT 'El vuelo ingresado de Ida para esa fecha no existe' as Resultado;
+			else 
+				if NOT EXISTS(SELECT * FROM instancias_vuelo as iv WHERE fechaVuelta = iv.fecha AND iv.vuelo = numeroVuelta) then
+					SELECT 'El vuelo ingresado de Vuelta para esa fecha no existe' as Resultado;
+				else 
+					if asientosDisponiblesIda < 0 then
+						SELECT 'No hay mas asientos disponibles en el vuelo de ida' as Resultado;
+					else
+						if asientosDisponiblesVuelta < 0 then
+						SELECT 'No hay mas asientos disponibles en el vuelo de vuelta' as Resultado;
+						else 
+							#Todos los datos son correctos y se crea la reserva
+							#Se crea la reserva para la Ida
+							START TRANSACTION;
+								if asientosBrindadosIda < asientosReservadosIda then
+									SET estadoIda = 'en Espera';
+								else
+									SET estadoIda = 'Confirmada';
+								end if;									
+									# Ingreso la reserva en reservas
+										INSERT INTO reservas(numero, doc_tipo, doc_nro, legajo, fecha, vencimiento, estado) 
+										VALUES (numeroReserva, tipo_doc , numero_doc, legajo, fechaIda , DATE_ADD(fechaIda, INTERVAL -15 day), estadoIda);
+									# Declaro el numero de la reserva a ingresar
+									SET numeroReserva = LAST_INSERT_ID();
+									# Ingreso la reserva en reserva_vuelo_clase
+										INSERT INTO reserva_vuelo_clase(numero, vuelo, fecha_vuelo, clase) 
+										VALUES (numeroReserva, numeroIda, fechaIda,claseIda);
+									#UPDATE asientos_reservados as ar SET cantidad = cantidad + 1  WHERE ar.vuelo = numeroIda AND ar.fecha = fecha AND ar.clase = clase; 
+									
+								if asientosBrindadosVuelta < asientosReservadosVuelta then
+									SET estadoVuelta = 'en Espera';
+								else
+									SET estadoVuelta = 'Confirmada';
+								end if;									
+									# Ingreso la reserva en reservas
+										INSERT INTO reservas(numero, doc_tipo, doc_nro, legajo, fecha, vencimiento, estado) 
+										VALUES (numeroReserva, tipo_doc , numero_doc, legajo, fechaVuelta , DATE_ADD(fechaVuelta, INTERVAL -15 day), estadoVuelta);
+									# Ingreso la reserva en reserva_vuelo_clase
+										INSERT INTO reserva_vuelo_clase(numero, vuelo, fecha_vuelo, clase) 
+										VALUES (numeroReserva, numeroVuelta, fechaVuelta,claseVuelta);
+									#UPDATE asientos_reservados as ar SET cantidad = cantidad + 1  WHERE ar.vuelo = numeroVuelta AND ar.fecha = fecha AND ar.clase = clase; 
+									
+																		
+									SELECT 'Las reservas se ingresaron correctamente' as Resultado;
+										
+							COMMIT;
+							
+						end if;						
+					end if;
+				end if;
+			end if;
+		end if;
+	end if;
+		
+end;!  
+delimiter ;
+
+
+
+/*
+------------------Funciones que use para probar----------------
+
+
+	LA SEGUNDA FUNCION NO ANDA, PORQUE NO PUEDE HABER DOS RESERVAS CON EL MISMO NUMERO PERO DE DISTINTOS VUELOS PORQUE TIENEN AL NUMERO COMO LA UNICA LLAVE.
+
+	call reservaVueloIda('MB', 'Turista', '2020-01-03', 'DNI', 1, 101 );
+	
+	call reservaVueloIdaVuelta('MB', 'Turista', '2020-01-03','MB','Turista','2020-01-07' ,'DNI', 2, 101 );
+	
+	
+	
+	SELECT count(*) as asientos_disponibles FROM vuelos_disponibles as vp WHERE vp.Numero = 'MB' and vp.Fecha = '2020-01-03' and vp.NombreClase = 'Turista';
+
+	SELECT b.cant_asientos as asientos FROM brinda as b WHERE b.vuelo = 'MB' and b.clase = 'Turista' ; 
+	
+
+	SELECT b.cant_asientos  
+		FROM brinda as b JOIN instancias_vuelo as iv ON b.vuelo = iv.vuelo AND b.dia = iv.dia 
+		WHERE b.vuelo = 'MB' AND b.clase = 'Turista' AND iv.fecha = '2020-01-03';
+	
+
+*/
+
 # ------------------------------------------------------------------------
 # Creacion usuario admin  
   
@@ -336,8 +530,22 @@ GRANT SELECT ON vuelos.vuelos_disponibles TO cliente@'%';
 
 #-------------------------------------------
 
+SET NAMES latin1;
 
-
+DELETE FROM  reserva_vuelo_clase;
+DELETE FROM  reservas;
+DELETE FROM  posee;
+DELETE FROM  brinda;
+DELETE FROM  pasajeros;
+DELETE FROM  empleados;
+DELETE FROM  comodidades;
+DELETE FROM  clases;
+DELETE FROM  instancias_vuelo; 
+DELETE FROM  salidas;
+DELETE FROM  vuelos_programados;
+DELETE FROM  modelos_avion;
+DELETE FROM  aeropuertos;
+DELETE FROM  ubicaciones;
 
 DELIMITER !
  
@@ -651,7 +859,7 @@ VALUES ('MDZ', 'Gdor. Francisco Gabrielli', '(54)02614480017', 'diremdz', 'Argen
 
 #---------------------------------------------------------------------------------------------------------------------------
 # RESERVA_VUELO_CLASE
-
+	
         # reservas del vuelo BC1 del 201X-01-02
 	INSERT INTO reserva_vuelo_clase(numero, vuelo, fecha_vuelo, clase) 
         VALUES (1, 'BC1', CONCAT(YEAR(DATE_ADD(NOW(), INTERVAL 1 YEAR)),'-01-02'), 'Turista');
@@ -681,5 +889,4 @@ VALUES ('MDZ', 'Gdor. Francisco Gabrielli', '(54)02614480017', 'diremdz', 'Argen
 #---------------------------------------------------------------------------------------------------------------------------
 
 DROP FUNCTION dia;
-
 
