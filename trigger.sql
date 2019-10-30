@@ -18,9 +18,9 @@ BEGIN
 DECLARE dias INT;
 DECLARE fechaActual DATE;
 DECLARE diaSem varchar(2);
+DECLARE claseVuelo VARCHAR(20);
 
 SET dias = 0;
-
 SET fechaActual = CURDATE();
 
 CASE DAYOFWEEK(fechaActual)
@@ -56,10 +56,12 @@ WHILE (diaSem <> NEW.dia) DO
 	END CASE;
 END WHILE;
 
+SELECT b.clase INTO claseVuelo FROM brinda as b WHERE b.vuelo = NEW.vuelo AND b.dia = diaSem;
+
 WHILE (dias < 365) DO
 
 	INSERT INTO instancias_vuelo(vuelo, fecha, dia, estado) VALUES (NEW.vuelo, fechaActual, diaSem, "A tiempo");
-	#--INSERT INTO asientos_reservados(vuelo, fecha, clase, cantidad) VALUES (NEW.vuelo, fechaActual, , 0);
+	INSERT INTO asientos_reservados(vuelo, fecha, clase, cantidad) VALUES (NEW.vuelo, fechaActual, claseVuelo, 0);
 	SET dias = dias + 7;
 	SET fechaActual = DATE_ADD(fechaActual, INTERVAL 7 DAY);
 
