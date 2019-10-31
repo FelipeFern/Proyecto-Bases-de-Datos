@@ -2,12 +2,19 @@ package Vuelos;
 
 import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
+import java.util.Vector;
+
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
+
 import quick.dbtable.DBTable;
 
 public class DataBaseConnection {
@@ -85,12 +92,17 @@ public class DataBaseConnection {
 
 	public void refreshTable(DBTable table, String query) {
 		try {
-			if (checkSelect(query)) {
-				refreshTableQuery(table, query);
-			} else {
-				Statement s = (Statement) connection.createStatement();
-				s.execute(query);
+			table.setSelectSql(query);
+			table.createColumnModelFromQuery();
+			for (int i = 0; i < table.getColumnCount(); i++) {
+				if (table.getColumn(i).getType() == Types.TIME) {
+					table.getColumn(i).setType(Types.CHAR);
+				}
+				if (table.getColumn(i).getType() == Types.DATE) {
+					table.getColumn(i).setDateFormat("dd/MM/YYYY");
+				}
 			}
+			table.refresh();
 		} catch (SQLException e) {
 			String msj = "Error al obtener datos.";
 			printSqlException(e, msj, "Error al refrescar la tabla.");
@@ -98,28 +110,6 @@ public class DataBaseConnection {
 			System.out.println("Class cast exeption");
 			System.out.println("Consulta: " + query);
 		}
-	}
-
-	private void refreshTableQuery(DBTable table, String query) throws SQLException {
-		table.setSelectSql(query);
-		table.createColumnModelFromQuery();
-		for (int i = 0; i < table.getColumnCount(); i++) {
-			if (table.getColumn(i).getType() == Types.TIME) {
-				table.getColumn(i).setType(Types.CHAR);
-			}
-			if (table.getColumn(i).getType() == Types.DATE) {
-				table.getColumn(i).setDateFormat("dd/MM/YYYY");
-			}
-		}
-		table.refresh();
-	}
-
-	private boolean checkSelect(String consult) {
-		consult = consult.toUpperCase();
-		if (consult.contains("SELECT") || consult.contains("DESCRIBE")) {
-			return true;
-		}
-		return false;
 	}
 
 	public void refreshExcecute(String message, JComboBox<String> comboBox, MainPanel panel) {
@@ -148,5 +138,43 @@ public class DataBaseConnection {
 		System.out.println("SQLState: " + ex.getSQLState());
 		System.out.println("VendorError: " + ex.getErrorCode());
 		JOptionPane.showMessageDialog(MainWindow.getInstance(), msj, description, JOptionPane.ERROR_MESSAGE);
+	}
+
+	public void excecuteQuery(String query) {
+		try {
+			Statement s = (Statement) connection.createStatement();
+			s.execute(query);
+		} catch (SQLException e) {
+			printSqlException(e, "Error al ejecutar el comando", "Ingrese un comando valido");
+		}
+	}
+
+	public JTable getFilledUpTable(String query) {
+		try {
+			Statement s = (Statement) connection.createStatement();
+			ResultSet rs = s.executeQuery(query);
+			return new JTable(buildTableModel(rs));
+		} catch (SQLException e) {
+			printSqlException(e, "Error al mostrar los datos", "Error al mostrar los datos");
+		}
+		return null;
+	}
+
+	private TableModel buildTableModel(ResultSet rs) throws SQLException {
+		ResultSetMetaData metaData = rs.getMetaData();
+		Vector<String> columnNames = new Vector<String>();
+		int columnCount = metaData.getColumnCount();
+		for (int column = 1; column <= columnCount; column++) {
+			columnNames.add(metaData.getColumnName(column));
+		}
+		Vector<Vector<Object>> data = new Vector<Vector<Object>>();
+		while (rs.next()) {
+			Vector<Object> vector = new Vector<Object>();
+			for (int columnIndex = 1; columnIndex <= columnCount; columnIndex++) {
+				vector.add(rs.getObject(columnIndex));
+			}
+			data.add(vector);
+		}
+		return new DefaultTableModel(data, columnNames);
 	}
 }

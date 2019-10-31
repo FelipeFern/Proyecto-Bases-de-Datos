@@ -55,7 +55,7 @@ public class MainWindow extends JFrame {
 	private void initGUI() {
 		setBounds(0, 0, 1350, 725);
 		setResizable(false);
-		
+
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
 
@@ -115,7 +115,7 @@ public class MainWindow extends JFrame {
 		contentPane.add(lblUser);
 		lblUser.setVisible(true);
 
-		lblPassword = new JLabel("Contraseña");
+		lblPassword = new JLabel("Contraseï¿½a");
 		lblPassword.setHorizontalAlignment(SwingConstants.CENTER);
 		lblPassword.setBounds(505, 256, 85, 25);
 		lblPassword.setBorder(BorderFactory.createLineBorder(Color.black));
@@ -168,10 +168,8 @@ public class MainWindow extends JFrame {
 				contentPane = new AdminPanel(table);
 			} else {
 				DBTable table2 = new DBTable();
-				DBTable table3 = new DBTable();
 				connection.connectToDatabase(table2, username, password);
-				connection.connectToDatabase(table3, username, password);
-				contentPane = new EmployeePanel(table, table2, table3);
+				contentPane = new EmployeePanel(table, table2);
 			}
 			setContentPane(contentPane);
 			setVisible(true);

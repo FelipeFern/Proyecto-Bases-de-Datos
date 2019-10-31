@@ -60,7 +60,7 @@ SELECT b.clase INTO claseVuelo FROM brinda as b WHERE b.vuelo = NEW.vuelo AND b.
 
 WHILE (dias < 365) DO
 
-	INSERT INTO instancias_vuelo(vuelo, fecha, dia, estado) VALUES (NEW.vuelo, fechaActual, diaSem, "A tiempo");
+	INSERT INTO instancias_vuelo(vuelo, fecha, dia, estado) VALUES (NEW.vuelo, fechaActual, diaSem, 'A tiempo');
 	INSERT INTO asientos_reservados(vuelo, fecha, clase, cantidad) VALUES (NEW.vuelo, fechaActual, claseVuelo, 0);
 	SET dias = dias + 7;
 	SET fechaActual = DATE_ADD(fechaActual, INTERVAL 7 DAY);

@@ -485,43 +485,6 @@ delimiter ;
 	
 */
 
-
-#-------------------------------------------------------------------------
-#Creaciones de TRIGGERS
-
-delimiter !
-CREATE TRIGGER cargar_instancias_vuelo 
-AFTER INSERT ON salidas FOR EACH ROW 
-BEGIN
-	
-	#declaracion de variables
-	DECLARE fecha_insercion DATE;
-	DECLARE X INT;
-	DECLARE Y INT;	
-	#--DECLARE ANIO INT;
-	
-	#Inicializacion de variables
-	SET fecha_insercion = curdate();
-	SET X = 365;
-	SET Y = 0;
-	#--ANIO = SELECT YEAR(curdate());
-
-/*
-	#Checkeamos si es biciesto
-	IF ((MOD(ANIO, 4) = 0 AND MOD(ANIO, 100) <> 0) OR (MOD(ANIO, 400) = 0) THEN
-		SET X = X + 1;
-	END IF;
-*/
-	#Bucle de insercion en instancias_vuelo
-	WHILE Y < X DO
-		INSERT INTO instancias_vuelo(vuelo, fecha, dia estado) 
-		VALUES (NEW.vuelo, DATEADD(curdate(), Y), NEW.dia, 'a tiempo');
-		SET Y = Y + 1;
-	END WHILE;
-END; !
-delimiter ;
-
-
 # ------------------------------------------------------------------------
 # Creacion usuario admin  
   

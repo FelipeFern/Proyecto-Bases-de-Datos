@@ -79,7 +79,11 @@ public class AdminPanel extends MainPanel {
 				String query = textCommand.getText().trim();
 				DefaultComboBoxModel<String> model = new DefaultComboBoxModel<String>();
 				cbAttributes.setModel(model);
-				dataConnection.refreshTable(table, query);
+				if (query.toUpperCase().contains("SELECT") || query.toUpperCase().contains("DESCRIBE")) {
+					dataConnection.refreshTable(table, query);
+				} else {
+					dataConnection.excecuteQuery(query);
+				}				
 				fillComboBoxTable();
 			}
 		});
