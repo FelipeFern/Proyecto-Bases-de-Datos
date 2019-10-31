@@ -160,7 +160,7 @@ CREATE TABLE instancias_vuelo (
   fecha DATE NOT NULL,
   estado VARCHAR(50),
   
-  CONSTRAINT pk_instancias
+   CONSTRAINT pk_instancias
   PRIMARY KEY (vuelo, fecha),
 
   FOREIGN KEY (vuelo, dia) REFERENCES salidas(vuelo, dia)
@@ -321,9 +321,8 @@ begin
 	DECLARE estado CHAR(100);	
 	DECLARE numeroReserva INT;
 	
-	#Si se produce una SQLEXCEPTION, se retrocede la transacción con ROLLBACK
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
-	BEGIN 
+	BEGIN # Si se produce una SQLEXCEPTION, se retrocede la transacción con ROLLBACK
 	SELECT 'SQLEXCEPTION!, transaccion abortada' as Resultado;
 	ROLLBACK;
 	END;
@@ -389,14 +388,8 @@ begin
 	DECLARE asientosBrindadosVuelta INT;
 	DECLARE asientosDisponiblesVuelta INT;
 	DECLARE estadoVuelta CHAR(100);
+	DECLARE estadoReserva CHAR(100);
 	DECLARE numeroReserva INT;
-	
-	#Si se produce una SQLEXCEPTION, se retrocede la transacción con ROLLBACK
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION
-	BEGIN 
-	SELECT 'SQLEXCEPTION!, transaccion abortada' as Resultado;
-	ROLLBACK;
-	END;
 
 	#Recupero datos del vuelo Ida
 	SELECT asientos_disponibles INTO asientosDisponiblesIda FROM vuelos_disponibles as vp WHERE vp.Numero = numeroIda AND vp.Fecha = fechaIda AND vp.NombreClase = claseIda;
@@ -439,9 +432,20 @@ begin
 								else
 									SET estadoIda = 'Confirmada';
 								end if;									
+								
+								if asientosBrindadosVuelta < asientosReservadosVuelta then
+									SET estadoVuelta = 'en Espera';
+								else
+									SET estadoVuelta = 'Confirmada';
+								end if;	
+								if (estadoIda = 'Confirmada' and estadoVuelta = 'Confirmada') then
+									SET estadoReserva = 'Confirmada';
+								else
+									SET estadoReserva = 'En espera';
+								end if;
 									# Ingreso la reserva en reservas
-										INSERT INTO reservas(numero, doc_tipo, doc_nro, legajo, fecha, vencimiento, estado) 
-										VALUES (numeroReserva, tipo_doc , numero_doc, legajo, fechaIda , DATE_ADD(fechaIda, INTERVAL -15 day), estadoIda);
+									INSERT INTO reservas(numero, doc_tipo, doc_nro, legajo, fecha, vencimiento, estado) 
+									VALUES (numeroReserva, tipo_doc , numero_doc, legajo, fechaIda , DATE_ADD(fechaIda, INTERVAL -15 day), estadoReserva);
 									# Declaro el numero de la reserva a ingresar
 									SET numeroReserva = LAST_INSERT_ID();
 									# Ingreso la reserva en reserva_vuelo_clase
@@ -449,11 +453,6 @@ begin
 										VALUES (numeroReserva, numeroIda, fechaIda,claseIda);
 									UPDATE asientos_reservados as ar SET ar.cantidad = asientosReservadosIda + 1  WHERE ar.vuelo = numeroIda AND ar.fecha = fecha AND ar.clase = clase; 
 									
-								if asientosBrindadosVuelta < asientosReservadosVuelta then
-									SET estadoVuelta = 'en Espera';
-								else
-									SET estadoVuelta = 'Confirmada';
-								end if;									
 									# Ingreso la reserva en reserva_vuelo_clase
 										INSERT INTO reserva_vuelo_clase(numero, vuelo, fecha_vuelo, clase) 
 										VALUES (numeroReserva, numeroVuelta, fechaVuelta,claseVuelta);
