@@ -1,6 +1,7 @@
 package Vuelos;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -11,6 +12,7 @@ import quick.dbtable.DBTable;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
+import javax.swing.border.LineBorder;
 import javax.swing.text.MaskFormatter;
 import javax.swing.JRadioButton;
 import javax.swing.ButtonGroup;
@@ -27,15 +29,17 @@ public class EmployeePanel extends MainPanel {
 	private DataBaseConnection dbConnection;
 	private JComboBox<String> cbCityFrom, cbCityTo;
 	private JFormattedTextField ftfDateFrom, ftfDateUp;
+	private String legajo;
+	private JLabel lblSelectedGoFlight, lblSelectedGoClass, lblSelectedBackFlight, lblSelectedBackClass, lblGoFlight,
+			lblGoClass, lblBackFlight, lblBackClass;
 
 	/**
 	 * Create the panel.
 	 */
-	public EmployeePanel(DBTable table, DBTable table2) {
+	public EmployeePanel(DBTable table, DBTable table2, String legajo) {
+		this.legajo = legajo;
 		this.table = table;
-		table.setVisible(false);
 		this.tableDescription = table2;
-		tableDescription.setVisible(false);
 		setBounds(0, 0, 1350, 725);
 		setLayout(null);
 		dbConnection = DataBaseConnection.getInstance();
@@ -45,14 +49,53 @@ public class EmployeePanel extends MainPanel {
 
 	private void initGUI() {
 		add(table, BorderLayout.CENTER);
-		table.setBounds(12, 120, 1326, 200);
+		table.setBounds(12, 120, 1170, 200);
 		table.setEditable(false);
-		tableDescription.setBounds(12, 340, 1326, 200);
+		tableDescription.setBounds(12, 340, 1170, 200);
 		add(tableDescription, BorderLayout.CENTER);
 		tableDescription.setEditable(false);
-		
+
 		table.addMouseListener(createMouseListener(table, true));
 		tableDescription.addMouseListener(createMouseListener(tableDescription, false));
+
+		lblGoFlight = new JLabel("Vuelo seleccionado");
+		lblGoFlight.setBounds(1194, 120, 130, 25);
+		add(lblGoFlight);
+
+		lblSelectedGoFlight = new JLabel();
+		lblSelectedGoFlight.setBounds(1194, 150, 130, 25);
+		lblSelectedGoFlight.setBorder(new LineBorder(Color.black));
+		add(lblSelectedGoFlight);
+
+		lblGoClass = new JLabel("Clase Seleccionada");
+		lblGoClass.setBounds(1194, 180, 130, 25);
+		add(lblGoClass);
+
+		lblSelectedGoClass = new JLabel();
+		lblSelectedGoClass.setBounds(1194, 210, 130, 25);
+		lblSelectedGoClass.setBorder(new LineBorder(Color.black));
+		add(lblSelectedGoClass);
+
+		lblBackFlight = new JLabel("Vuelo seleccionado");
+		lblBackFlight.setBounds(1194, 340, 130, 25);
+		add(lblBackFlight);
+
+		lblSelectedBackFlight = new JLabel();
+		lblSelectedBackFlight.setBounds(1194, 370, 130, 25);
+		lblSelectedBackFlight.setBorder(new LineBorder(Color.black));
+		add(lblSelectedBackFlight);
+
+		lblBackClass = new JLabel("Clase seleccionada");
+		lblBackClass.setBounds(1194, 400, 130, 25);
+		add(lblBackClass);
+
+		lblSelectedBackClass = new JLabel();
+		lblSelectedBackClass.setBounds(1194, 430, 130, 25);
+		lblSelectedBackClass.setBorder(new LineBorder(Color.black));
+		add(lblSelectedBackClass);
+
+		setVisibleTable(false);
+		setVisibleTableDescription(false);
 
 		JLabel lblCityFrom = new JLabel("Ciudad origen");
 		lblCityFrom.setBounds(12, 12, 125, 25);
@@ -96,12 +139,11 @@ public class EmployeePanel extends MainPanel {
 		add(btnShowFlights);
 		btnShowFlights.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				table.cleanup();
-				tableDescription.cleanup();
-				table.setVisible(true);
+				setVisibleTable(true);
+				setVisibleTableDescription(false);
 				refrescarTablaIda();
 				if (rdbtnRoundTrip.isSelected()) {
-					tableDescription.setVisible(true);
+					setVisibleTableDescription(true);
 					refrescarTablaVuelta();
 				}
 			}
@@ -114,7 +156,23 @@ public class EmployeePanel extends MainPanel {
 		initJFormattedTextFields();
 	}
 
-	private MouseListener createMouseListener(DBTable tabla, boolean b) {
+	private void setVisibleTable(boolean b) {
+		table.setVisible(b);
+		lblGoClass.setVisible(b);
+		lblGoFlight.setVisible(b);
+		lblSelectedGoClass.setVisible(b);
+		lblSelectedGoFlight.setVisible(b);
+	}
+
+	private void setVisibleTableDescription(boolean b) {
+		tableDescription.setVisible(b);
+		lblBackFlight.setVisible(b);
+		lblBackClass.setVisible(b);
+		lblSelectedBackClass.setVisible(b);
+		lblSelectedBackFlight.setVisible(b);
+	}
+
+	private MouseListener createMouseListener(DBTable tabla, boolean esVueloIda) {
 		return new MouseListener() {
 			public void mouseReleased(MouseEvent e) {}
 			public void mousePressed(MouseEvent e) {}
@@ -123,17 +181,35 @@ public class EmployeePanel extends MainPanel {
 			public void mouseClicked(MouseEvent e) {
 				int row = tabla.getSelectedRow();
 				Date fechaSalida;
-				if (b) {
+				String nroVuelo = tabla.getValueAt(row, 0).toString();
+				if (esVueloIda) {
 					fechaSalida = Fechas.convertirStringADateSQL(ftfDateFrom.getText());
+					lblSelectedGoFlight.setText(nroVuelo);
+					lblSelectedGoClass.setText("");
 				} else {
 					fechaSalida = Fechas.convertirStringADateSQL(ftfDateUp.getText());
+					lblSelectedBackFlight.setText(nroVuelo);
+					lblSelectedBackClass.setText("");
 				}
-				String nroVuelo = tabla.getValueAt(row, 0).toString();
 				String query = "SELECT Numero AS 'Numero Vuelo', NombreClase AS Clase, \n"
 						+ "asientos_disponibles AS 'Asientos disponibles', Precio \n"
 						+ "FROM vuelos_disponibles WHERE Numero = '" + nroVuelo + "' AND Fecha = '" + fechaSalida
 						+ "' ORDER BY Numero, Fecha;";
 				JTable showTable = dbConnection.getFilledUpTable(query);
+				showTable.addMouseListener(new MouseListener() {
+					public void mouseReleased(MouseEvent arg0) {}
+					public void mousePressed(MouseEvent arg0) {}
+					public void mouseExited(MouseEvent arg0) {}
+					public void mouseEntered(MouseEvent arg0) {}
+					public void mouseClicked(MouseEvent arg0) {	
+						String clase = showTable.getValueAt(showTable.getSelectedRow(), 1).toString();
+						if (esVueloIda) {
+							lblSelectedGoClass.setText(clase);
+						} else {
+							lblSelectedBackClass.setText(clase);
+						}
+					}
+				});
 				JOptionPane.showMessageDialog(null, showTable);
 			}
 		};
@@ -167,6 +243,34 @@ public class EmployeePanel extends MainPanel {
 		cbCityTo = new JComboBox<String>();
 		cbCityTo.setBounds(149, 45, 125, 25);
 		add(cbCityTo);
+
+		JButton btnFlightReservation = new JButton("Reservar vuelo");
+		btnFlightReservation.setBounds(900, 28, 150, 30);
+		btnFlightReservation.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				try {
+					String tipoDNI = JOptionPane.showInputDialog("Ingrese el tipo de documento del cliente");
+					String dni = JOptionPane.showInputDialog("Ingrese el numero de documento del cliente");
+					String query;
+					if (tableDescription.isVisible()) {
+						query = "CALL reservavueloidavuelta('" + lblSelectedGoFlight.getText() + "','"
+								+ lblSelectedGoClass.getText() + "','" + getFromDate() + "','"
+								+ lblBackFlight.getText() + "','" + lblBackClass.getText() + "','" + getUpDate() + "','"
+								+ tipoDNI + "'," + dni + "," + legajo + ");";
+					} else {
+						query = "CALL reservavueloida('" + lblSelectedGoFlight.getText() + "','"
+								+ lblSelectedGoClass.getText() + "','" + getFromDate() + "','"
+								+ tipoDNI + "'," + dni + "," + legajo + ");";
+					}
+					System.out.println(query);
+					dbConnection.excecuteQuery(query);	
+					JOptionPane.showMessageDialog(MainWindow.getInstance(), "La reserva se realizó con exito!", "Exito en la operación", JOptionPane.INFORMATION_MESSAGE);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+		add(btnFlightReservation);
 	}
 
 	private void fillCityComboBox() {
@@ -204,8 +308,11 @@ public class EmployeePanel extends MainPanel {
 			throw new Exception("Alguna de las fechas ingresadas no es correcta, por favor reviselas nuevamente");
 	}
 
-	private Date getUpDate() {
-		return Fechas.convertirStringADateSQL(ftfDateUp.getText());
+	private Date getUpDate() throws Exception {
+		if (Fechas.validar(ftfDateFrom.getText()))
+			return Fechas.convertirStringADateSQL(ftfDateUp.getText());
+		else
+			throw new Exception("Alguna de las fechas ingresadas no es correcta, por favor reviselas nuevamente");
 	}
 
 	private void refrescarTablaVuelta() {

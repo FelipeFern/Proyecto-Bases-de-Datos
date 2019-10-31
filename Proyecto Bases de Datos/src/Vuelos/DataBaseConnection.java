@@ -140,12 +140,13 @@ public class DataBaseConnection {
 		JOptionPane.showMessageDialog(MainWindow.getInstance(), msj, description, JOptionPane.ERROR_MESSAGE);
 	}
 
+	
 	public void excecuteQuery(String query) {
 		try {
 			Statement s = (Statement) connection.createStatement();
 			s.execute(query);
 		} catch (SQLException e) {
-			printSqlException(e, "Error al ejecutar el comando", "Ingrese un comando valido");
+			printSqlException(e, e.getMessage(), "Error");
 		}
 	}
 

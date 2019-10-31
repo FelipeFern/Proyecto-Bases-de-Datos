@@ -311,8 +311,8 @@ WHERE iv.fecha > NOW();
 delimiter !
 
 # Solo viaje de ida
-create procedure reservaVueloIda(IN numero VARCHAR(50), IN clase VARCHAR(20), IN fecha DATE, IN tipo_doc VARCHAR(5), IN numero_doc INT, IN legajo INT)
-begin	
+CREATE PROCEDURE reservaVueloIda(IN numero VARCHAR(50), IN clase VARCHAR(20), IN fecha DATE, IN tipo_doc VARCHAR(5), IN numero_doc INT, IN legajo INT)
+BEGIN	
 	
 	#declaracion de variables
 	DECLARE asientosReservados INT;
@@ -376,7 +376,7 @@ delimiter ;
 
 
 delimiter !
-create procedure reservaVueloIdaVuelta(IN numeroIda VARCHAR(50), IN claseIda VARCHAR(20), IN fechaIda DATE,IN numeroVuelta VARCHAR(50), IN claseVuelta VARCHAR(20), IN fechaVuelta DATE, IN tipo_doc VARCHAR(5), IN numero_doc INT, IN legajo INT)
+CREATE PROCEDURE reservaVueloIdaVuelta(IN numeroIda VARCHAR(50), IN claseIda VARCHAR(20), IN fechaIda DATE,IN numeroVuelta VARCHAR(50), IN claseVuelta VARCHAR(20), IN fechaVuelta DATE, IN tipo_doc VARCHAR(5), IN numero_doc INT, IN legajo INT)
 begin	
 	
 	#declaracion de variables
@@ -505,9 +505,9 @@ GRANT UPDATE, DELETE, INSERT ON vuelos.pasajeros TO empleado@'%';
 
 GRANT UPDATE, DELETE, INSERT ON vuelos.reserva_vuelo_clase TO empleado@'%';
 
-GRANT EXECUTE ON PROCEDURE vuelos.reservaVueloIda TO 'empleado'@'%';
+GRANT EXECUTE ON PROCEDURE vuelos.reservaVueloIda TO empleado@'%';
 
-GRANT EXECUTE ON PROCEDURE vuelos.reservaVueloIdaVuelta TO 'empleado'@'%';
+GRANT EXECUTE ON PROCEDURE vuelos.reservaVueloIdaVuelta TO empleado@'%';
 
 
 # ------------------------------------------------------------------------

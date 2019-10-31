@@ -169,7 +169,7 @@ public class MainWindow extends JFrame {
 			} else {
 				DBTable table2 = new DBTable();
 				connection.connectToDatabase(table2, username, password);
-				contentPane = new EmployeePanel(table, table2);
+				contentPane = new EmployeePanel(table, table2, username);
 			}
 			setContentPane(contentPane);
 			setVisible(true);
