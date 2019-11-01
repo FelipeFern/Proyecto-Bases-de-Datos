@@ -7,7 +7,7 @@
 # 
 # Script para la creacion de la base de datos, usuarios y vistas.
 
-use datos;
+use vuelos;
 
 # ------------------------------------------------------------------------
 #Creacion la base de datos.
@@ -311,8 +311,8 @@ WHERE iv.fecha > NOW();
 delimiter !
 
 # Solo viaje de ida
-CREATE PROCEDURE reservaVueloIda(IN numero VARCHAR(50), IN clase VARCHAR(20), IN fecha DATE, IN tipo_doc VARCHAR(5), IN numero_doc INT, IN legajo INT)
-BEGIN	
+create procedure reservaVueloIda(IN numero VARCHAR(50), IN clase VARCHAR(20), IN fecha DATE, IN tipo_doc VARCHAR(5), IN numero_doc INT, IN legajo INT, OUT resultado VARCHAR(50))
+begin	
 	
 	#declaracion de variables
 	DECLARE asientosReservados INT;
@@ -336,16 +336,16 @@ BEGIN
 	SELECT cantidad INTO asientosReservados FROM asientos_reservados as ar WHERE ar.vuelo = numero AND ar.fecha = fecha AND ar.clase = clase FOR UPDATE;
 	
 	if NOT EXISTS(SELECT * FROM empleados as e WHERE e.legajo = legajo) then
-		 SELECT 'El empleado ingresado no existe' as Resultado;
+		 SET resultado = 'El empleado ingresado no existe';
 	else 
 		if NOT EXISTS(SELECT * FROM instancias_vuelo as iv WHERE fecha = iv.fecha AND iv.vuelo = numero) then
-			SELECT 'El vuelo ingresado para esa fecha no existe' as Resultado;
+			SET resultado = 'El vuelo ingresado para esa fecha no existe' ;
 		else 
 			if NOT EXISTS(SELECT * FROM pasajeros as p WHERE p.doc_tipo = tipo_doc AND p.doc_nro = numero_doc) then
-			SELECT 'El pasajero no existe' as Resultado;
+			SET resultado = 'El pasajero no existe';
 			else 
 				if asientosDisponibles < 0 then
-					SELECT 'No hay mas asientos disponibles' as Resultado;
+					SET resultado = 'No hay mas asientos disponibles';
 				else
 					#Todos los datos son correctos y se crea la reserva
 					if asientosBrindados < asientosReservados then
@@ -363,7 +363,7 @@ BEGIN
 								VALUES (LAST_INSERT_ID(), numero, fecha,clase);
 							
 							UPDATE asientos_reservados as ar SET ar.cantidad = asientosReservados + 1  WHERE ar.vuelo = numero AND ar.fecha = fecha AND ar.clase = clase; 
-							SELECT 'La reserva se ingreso correctamente' as Resultado;
+							SET resultado = 'La reserva se ingreso correctamente' ;
 														
 						COMMIT;
 				end if;
@@ -376,7 +376,7 @@ delimiter ;
 
 
 delimiter !
-CREATE PROCEDURE reservaVueloIdaVuelta(IN numeroIda VARCHAR(50), IN claseIda VARCHAR(20), IN fechaIda DATE,IN numeroVuelta VARCHAR(50), IN claseVuelta VARCHAR(20), IN fechaVuelta DATE, IN tipo_doc VARCHAR(5), IN numero_doc INT, IN legajo INT)
+create procedure reservaVueloIdaVuelta(IN numeroIda VARCHAR(50), IN claseIda VARCHAR(20), IN fechaIda DATE,IN numeroVuelta VARCHAR(50), IN claseVuelta VARCHAR(20), IN fechaVuelta DATE, IN tipo_doc VARCHAR(7), IN numero_doc INT, IN legajo INT,  OUT resultado VARCHAR(50))
 begin	
 	
 	#declaracion de variables
@@ -407,22 +407,22 @@ begin
 	
 	
 	if NOT EXISTS(SELECT * FROM empleados as e WHERE e.legajo = legajo) then
-		 SELECT 'El empleado ingresado no existe' as Resultado;
+		 SET resultado = 'El empleado ingresado no existe' ;
 	else 
 		if NOT EXISTS(SELECT * FROM pasajeros as p WHERE p.doc_tipo = tipo_doc AND p.doc_nro = numero_doc) then
-			SELECT 'El pasajero no existe' as Resultado;
+			SET resultado = 'El pasajero no existe' ;
 		else 
 			if NOT EXISTS(SELECT * FROM instancias_vuelo as iv WHERE fechaIda = iv.fecha AND iv.vuelo = numeroVuelta) then
-				SELECT 'El vuelo ingresado de Ida para esa fecha no existe' as Resultado;
+				SET resultado = 'El vuelo ingresado de Ida para esa fecha no existe';
 			else 
 				if NOT EXISTS(SELECT * FROM instancias_vuelo as iv WHERE fechaVuelta = iv.fecha AND iv.vuelo = numeroVuelta) then
-					SELECT 'El vuelo ingresado de Vuelta para esa fecha no existe' as Resultado;
+					SET resultado = 'El vuelo ingresado de Vuelta para esa fecha no existe' ;
 				else 
 					if asientosDisponiblesIda < 0 then
-						SELECT 'No hay mas asientos disponibles en el vuelo de ida' as Resultado;
+						SET resultado = 'No hay mas asientos disponibles en el vuelo de ida' ;
 					else
 						if asientosDisponiblesVuelta < 0 then
-						SELECT 'No hay mas asientos disponibles en el vuelo de vuelta' as Resultado;
+						SET resultado = 'No hay mas asientos disponibles en el vuelo de vuelta' ;
 						else 
 							#Todos los datos son correctos y se crea la reserva
 							#Se crea la reserva para la Ida
@@ -458,7 +458,7 @@ begin
 										VALUES (numeroReserva, numeroVuelta, fechaVuelta,claseVuelta);
 									UPDATE asientos_reservados as ar SET ar.cantidad = asientosReservadosVuelta + 1  WHERE ar.vuelo = numeroVuelta AND ar.fecha = fecha AND ar.clase = clase; 
 																										
-									SELECT 'Las reservas se ingresaron correctamente' as Resultado;
+									SET resultado = 'Las reservas se ingresaron correctamente' ;
 										
 							COMMIT;
 							
@@ -505,9 +505,9 @@ GRANT UPDATE, DELETE, INSERT ON vuelos.pasajeros TO empleado@'%';
 
 GRANT UPDATE, DELETE, INSERT ON vuelos.reserva_vuelo_clase TO empleado@'%';
 
-GRANT EXECUTE ON PROCEDURE vuelos.reservaVueloIda TO empleado@'%';
+GRANT EXECUTE ON PROCEDURE vuelos.reservaVueloIda TO 'empleado'@'%';
 
-GRANT EXECUTE ON PROCEDURE vuelos.reservaVueloIdaVuelta TO empleado@'%';
+GRANT EXECUTE ON PROCEDURE vuelos.reservaVueloIdaVuelta TO 'empleado'@'%';
 
 
 # ------------------------------------------------------------------------
