@@ -8,6 +8,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.sql.Date;
 import java.text.ParseException;
+import java.util.ArrayList;
 import quick.dbtable.DBTable;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -29,7 +30,7 @@ public class EmployeePanel extends MainPanel {
 	private DataBaseConnection dbConnection;
 	private JComboBox<String> cbCityFrom, cbCityTo;
 	private JFormattedTextField ftfDateFrom, ftfDateUp;
-	private String legajo;
+	private int legajo;
 	private JLabel lblSelectedGoFlight, lblSelectedGoClass, lblSelectedBackFlight, lblSelectedBackClass, lblGoFlight,
 			lblGoClass, lblBackFlight, lblBackClass;
 
@@ -37,7 +38,7 @@ public class EmployeePanel extends MainPanel {
 	 * Create the panel.
 	 */
 	public EmployeePanel(DBTable table, DBTable table2, String legajo) {
-		this.legajo = legajo;
+		this.legajo = Integer.parseInt(legajo);
 		this.table = table;
 		this.tableDescription = table2;
 		setBounds(0, 0, 1350, 725);
@@ -251,20 +252,30 @@ public class EmployeePanel extends MainPanel {
 				try {
 					String tipoDNI = JOptionPane.showInputDialog("Ingrese el tipo de documento del cliente");
 					String dni = JOptionPane.showInputDialog("Ingrese el numero de documento del cliente");
+					int i = 0;
+					ArrayList<Object> parameters = new ArrayList<Object>();
+					parameters.add(i++, lblSelectedGoFlight.getText());
+					parameters.add(i++, lblSelectedGoClass.getText());
+					parameters.add(i++, getFromDate());
 					String query;
 					if (tableDescription.isVisible()) {
-						query = "CALL reservavueloidavuelta('" + lblSelectedGoFlight.getText() + "','"
-								+ lblSelectedGoClass.getText() + "','" + getFromDate() + "','"
-								+ lblBackFlight.getText() + "','" + lblBackClass.getText() + "','" + getUpDate() + "','"
-								+ tipoDNI + "'," + dni + "," + legajo + ");";
+						query = "CALL reservavueloidavuelta(?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+						parameters.add(i++, lblBackFlight.getText());
+						parameters.add(i++, lblBackClass.getText());
+						parameters.add(i++, getUpDate());
 					} else {
-						query = "CALL reservavueloida('" + lblSelectedGoFlight.getText() + "','"
-								+ lblSelectedGoClass.getText() + "','" + getFromDate() + "','"
-								+ tipoDNI + "'," + dni + "," + legajo + ");";
+						query = "CALL reservavueloida(?, ?, ?, ?, ?, ?, ?);";
 					}
-					System.out.println(query);
-					dbConnection.excecuteQuery(query);	
-					JOptionPane.showMessageDialog(MainWindow.getInstance(), "La reserva se realizó con exito!", "Exito en la operación", JOptionPane.INFORMATION_MESSAGE);
+					parameters.add(i++, tipoDNI);
+					parameters.add(i++, Integer.parseInt(dni));
+					parameters.add(i++, legajo);
+					parameters.add(i++, new String());
+					String finishStatus = dbConnection.excecuteProcedure(query, parameters);
+					if (finishStatus != null && finishStatus.contains("correctamente")) {
+						JOptionPane.showMessageDialog(MainWindow.getInstance(), "La reserva se realizo� con exito!", "Exito en la operacion", JOptionPane.INFORMATION_MESSAGE);
+					} else {
+						JOptionPane.showMessageDialog(MainWindow.getInstance(), finishStatus, "Fallo en la operacion", JOptionPane.ERROR_MESSAGE);
+					}				
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

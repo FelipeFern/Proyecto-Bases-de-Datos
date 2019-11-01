@@ -1,20 +1,21 @@
 package Vuelos;
 
+import java.sql.CallableStatement;
+import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.Vector;
-
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
-
 import quick.dbtable.DBTable;
 
 public class DataBaseConnection {
@@ -177,5 +178,29 @@ public class DataBaseConnection {
 			data.add(vector);
 		}
 		return new DefaultTableModel(data, columnNames);
+	}
+
+	public String excecuteProcedure(String query, ArrayList<Object> parametersList) {
+		try {
+			CallableStatement statement = (CallableStatement) connection.prepareCall(query);
+			int i = 0;
+			statement.setString(++i, (String) parametersList.get(i - 1));
+			statement.setString(++i, (String) parametersList.get(i - 1));
+			statement.setDate(++i, (Date) parametersList.get(i - 1));
+			if (parametersList.size() != 7) {
+				statement.setString(++i, (String) parametersList.get(i - 1));
+				statement.setString(++i, (String) parametersList.get(i - 1));
+				statement.setDate(++i, (Date) parametersList.get(i - 1));
+			}
+			statement.setString(++i, (String) parametersList.get(i - 1));
+			statement.setInt(++i, (int) parametersList.get(i - 1));
+			statement.setInt(++i, (int) parametersList.get(i - 1));
+			statement.registerOutParameter(++i, Types.VARCHAR);
+			statement.executeQuery();
+			return statement.getString(i);
+		} catch (SQLException e) {
+			printSqlException(e, e.getMessage(), "Error");
+			return null;
+		}
 	}
 }
