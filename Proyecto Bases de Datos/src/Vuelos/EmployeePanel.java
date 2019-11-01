@@ -272,12 +272,13 @@ public class EmployeePanel extends MainPanel {
 					parameters.add(i++, new String());
 					String finishStatus = dbConnection.excecuteProcedure(query, parameters);
 					if (finishStatus != null && finishStatus.contains("correctamente")) {
-						JOptionPane.showMessageDialog(MainWindow.getInstance(), "La reserva se realizo³ con exito!", "Exito en la operacion", JOptionPane.INFORMATION_MESSAGE);
+						JOptionPane.showMessageDialog(MainWindow.getInstance(), "La reserva se realizoï¿½ con exito!", "Exito en la operacion", JOptionPane.INFORMATION_MESSAGE);
 					} else {
 						JOptionPane.showMessageDialog(MainWindow.getInstance(), finishStatus, "Fallo en la operacion", JOptionPane.ERROR_MESSAGE);
 					}				
 				} catch (Exception e) {
 					e.printStackTrace();
+					System.out.println("Error en excepcion");
 				}
 			}
 		});

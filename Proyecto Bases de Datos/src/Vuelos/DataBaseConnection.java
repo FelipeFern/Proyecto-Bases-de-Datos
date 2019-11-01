@@ -199,7 +199,9 @@ public class DataBaseConnection {
 			statement.executeQuery();
 			return statement.getString(i);
 		} catch (SQLException e) {
+			e.printStackTrace();
 			printSqlException(e, e.getMessage(), "Error");
+			System.out.println("Error en DATABASE CONNECTION");
 			return null;
 		}
 	}

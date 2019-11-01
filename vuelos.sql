@@ -311,7 +311,7 @@ WHERE iv.fecha > NOW();
 delimiter !
 
 # Solo viaje de ida
-create procedure reservaVueloIda(IN numero VARCHAR(50), IN clase VARCHAR(20), IN fecha DATE, IN tipo_doc VARCHAR(5), IN numero_doc INT, IN legajo INT, OUT resultado VARCHAR(50))
+create procedure reservaVueloIda(IN numero VARCHAR(50), IN clase VARCHAR(20), IN fecha DATE, IN tipo_doc VARCHAR(5), IN numero_doc INT, IN legajo INT, OUT resultado VARCHAR(250))
 begin	
 	
 	#declaracion de variables
@@ -323,7 +323,7 @@ begin
 	
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
 	BEGIN # Si se produce una SQLEXCEPTION, se retrocede la transacción con ROLLBACK
-	SELECT 'SQLEXCEPTION!, transaccion abortada' as Resultado;
+	SELECT 'SQLEXCEPTION!, transaccion abortada' as resultado;
 	ROLLBACK;
 	END;
 	
@@ -344,7 +344,7 @@ begin
 			if NOT EXISTS(SELECT * FROM pasajeros as p WHERE p.doc_tipo = tipo_doc AND p.doc_nro = numero_doc) then
 			SET resultado = 'El pasajero no existe';
 			else 
-				if asientosDisponibles < 0 then
+				if asientosDisponibles = 0 then
 					SET resultado = 'No hay mas asientos disponibles';
 				else
 					#Todos los datos son correctos y se crea la reserva
@@ -376,7 +376,7 @@ delimiter ;
 
 
 delimiter !
-create procedure reservaVueloIdaVuelta(IN numeroIda VARCHAR(50), IN claseIda VARCHAR(20), IN fechaIda DATE,IN numeroVuelta VARCHAR(50), IN claseVuelta VARCHAR(20), IN fechaVuelta DATE, IN tipo_doc VARCHAR(7), IN numero_doc INT, IN legajo INT,  OUT resultado VARCHAR(50))
+CREATE PROCEDURE reservaVueloIdaVuelta(IN numeroIda VARCHAR(50), IN claseIda VARCHAR(20), IN fechaIda DATE,IN numeroVuelta VARCHAR(50), IN claseVuelta VARCHAR(20), IN fechaVuelta DATE, IN tipo_doc VARCHAR(5), IN numero_doc INT, IN legajo INT, OUT resultado VARCHAR(250))
 begin	
 	
 	#declaracion de variables
@@ -412,16 +412,16 @@ begin
 		if NOT EXISTS(SELECT * FROM pasajeros as p WHERE p.doc_tipo = tipo_doc AND p.doc_nro = numero_doc) then
 			SET resultado = 'El pasajero no existe' ;
 		else 
-			if NOT EXISTS(SELECT * FROM instancias_vuelo as iv WHERE fechaIda = iv.fecha AND iv.vuelo = numeroVuelta) then
+			if NOT EXISTS(SELECT * FROM instancias_vuelo as iv WHERE fechaIda = iv.fecha AND iv.vuelo = numeroIda) then
 				SET resultado = 'El vuelo ingresado de Ida para esa fecha no existe';
 			else 
 				if NOT EXISTS(SELECT * FROM instancias_vuelo as iv WHERE fechaVuelta = iv.fecha AND iv.vuelo = numeroVuelta) then
 					SET resultado = 'El vuelo ingresado de Vuelta para esa fecha no existe' ;
 				else 
-					if asientosDisponiblesIda < 0 then
+					if asientosDisponiblesIda = 0 then
 						SET resultado = 'No hay mas asientos disponibles en el vuelo de ida' ;
 					else
-						if asientosDisponiblesVuelta < 0 then
+						if asientosDisponiblesVuelta = 0 then
 						SET resultado = 'No hay mas asientos disponibles en el vuelo de vuelta' ;
 						else 
 							#Todos los datos son correctos y se crea la reserva
